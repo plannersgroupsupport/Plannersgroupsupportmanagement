@@ -1,6 +1,4 @@
 import { NextResponse } from 'next/server';
-import { writeFile, mkdir } from 'fs/promises';
-import { join } from 'path';
 import { prisma } from '@/lib/prisma';
 
 export async function POST(req: Request) {
@@ -14,25 +12,18 @@ export async function POST(req: Request) {
       return NextResponse.json({ success: false, error: 'No file found in request' }, { status: 400 });
     }
 
-    const bytes = await file.arrayBuffer();
-    const buffer = Buffer.from(bytes);
-
-    // Write file to local disk (public/uploads directory)
-    const uploadDir = join(process.cwd(), 'public', 'uploads');
+    // UPLOAD TO VERCEL BLOB (Cloud Storage)
+    const { put } = require('@vercel/blob');
     
-    try {
-      await mkdir(uploadDir, { recursive: true });
-    } catch (e) {
-      // Directory already exists or error
-    }
-
     // Sanitize file name
     const originalName = file.name || 'uploaded-file';
     const fileName = `${Date.now()}-${originalName.replace(/[^a-zA-Z0-9.\-_]/g, '')}`;
-    const path = join(uploadDir, fileName);
     
-    await writeFile(path, buffer);
-    const fileUrl = `/uploads/${fileName}`;
+    const blob = await put(fileName, file, {
+      access: 'public',
+    });
+
+    const fileUrl = blob.url;
     const course = data.get('course') as string; // For NOTES
 
     // Link file to user in Database if userId and type are provided
