@@ -1,0 +1,143 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+model User {
+  id           String   @id @default(uuid())
+  loginId      String   @unique
+  passwordHash String
+  role         String   // SUPERADMIN, FACULTY, STUDENT, ACCOUNTANT, CERT_STAFF
+  name         String
+  phone        String?
+  email        String?  @unique
+  isApproved   Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  studentProfile StudentProfile?
+  facultyProfile FacultyProfile?
+  fileUploads    File[]
+  feePayments    FeePayment[]
+}
+
+model StudentProfile {
+  id              String    @id @default(uuid())
+  userId          String    @unique
+  user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  admissionNo     String    @unique
+  admissionDate   DateTime?
+  dob             DateTime?
+  sex             String?
+  courseName      String
+  courseStartDate DateTime
+  courseEndDate   DateTime?
+  batch           String?   // MORNING, AFTERNOON, EVENING
+  labNumber       String?   // LAB-1, LAB-2, LAB-3
+  collegeName     String?
+  fatherName      String?
+  fatherPhone     String?   // New field for parent contact
+  address         String?
+  district        String?
+  pincode         String?
+  packageType     String    // PREMIUM, BASIC
+  totalCourseFee  Float?    // Accountant override total payable amount
+  currentStatus   String    @default("Autocad") // Current training status
+  isPlaced        Boolean   @default(false)
+  placedAt        String?   // Company Name / Location
+  labId           String?   // Keep for legacy compatibility if needed
+  lab             Lab?      @relation(fields: [labId], references: [id])
+  
+  attendances     Attendance[]
+  certificateRecords CertificateRecord[]
+}
+
+model FacultyProfile {
+  id              String    @id @default(uuid())
+  userId          String    @unique
+  user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  labId           String?
+  lab             Lab?      @relation("FacultyLab", fields: [labId], references: [id])
+}
+
+model Lab {
+  id              String           @id @default(uuid())
+  name            String           @unique // e.g., "Lab 1"
+  faculties       FacultyProfile[] @relation("FacultyLab")
+  students        StudentProfile[]
+}
+
+model File {
+  id           String   @id @default(uuid())
+  userId       String
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type         String   // PHOTO, AGREEMENT, SSLC, NOTES
+  course       String?  // For NOTES: 'AUTOCAD', 'REVIT', etc.
+  url          String
+  uploadedAt   DateTime @default(now())
+}
+
+model FeePayment {
+  id           String   @id @default(uuid())
+  userId       String
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  amount       Float
+  month        String   // e.g., "2023-10"
+  status       String   // PAID, PENDING
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model Attendance {
+  id               String         @id @default(uuid())
+  studentProfileId String
+  studentProfile   StudentProfile @relation(fields: [studentProfileId], references: [id], onDelete: Cascade)
+  date             DateTime
+  status           String         // PRESENT, ABSENT, MEDICAL
+}
+
+model Holiday {
+  id     String   @id @default(uuid())
+  date   DateTime @unique
+  reason String?
+}
+
+model SystemSettings {
+  id          String  @id @default("singleton")
+  companyName String  @default("Planners Group")
+  logoUrl     String?
+}
+model PasswordResetRequest {
+  id          String   @id @default(uuid())
+  admissionNo String
+  fullName    String
+  loginId     String
+  phoneNumber String
+  status      String   @default("PENDING") // PENDING, RESOLVED
+  createdAt    DateTime @default(now())
+}
+model Expense {
+  id          String   @id @default(uuid())
+  title       String
+  category    String
+  amount      Float
+  date        DateTime @default(now())
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+model CertificateRecord {
+  id               String         @id @default(uuid())
+  studentProfileId String
+  studentProfile   StudentProfile @relation(fields: [studentProfileId], references: [id], onDelete: Cascade)
+  type             String         // TESI, AUTODESK, EXP, ALL
+  status           String         @default("APPLIED") // APPLIED, ISSUED
+  appliedAt        DateTime       @default(now())
+  issuedAt         DateTime?
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
+}
