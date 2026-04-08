@@ -64,7 +64,7 @@ export default async function DashboardPage() {
       });
 
       const certRecords: any[] = await prisma.$queryRawUnsafe(
-        'SELECT * FROM CertificateRecord WHERE studentProfileId = ? ORDER BY updatedAt DESC LIMIT 1',
+        'SELECT * FROM "CertificateRecord" WHERE "studentProfileId" = $1 ORDER BY "updatedAt" DESC LIMIT 1',
         profile?.id
       );
       const existingRequest = certRecords && certRecords.length > 0 ? certRecords[0] : null;

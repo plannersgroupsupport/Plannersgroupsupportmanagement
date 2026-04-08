@@ -35,8 +35,8 @@ export async function POST(req: Request) {
     const amountVal = parseFloat(amount);
 
     await prisma.$executeRawUnsafe(
-      `INSERT INTO Expense (id, title, category, amount, date, description, createdAt, updatedAt) 
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+      `INSERT INTO "Expense" (id, title, category, amount, date, description, "createdAt", "updatedAt") 
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
       id, title, category || 'General', amountVal, expenseDate, description || '', now, now
     );
 
@@ -55,7 +55,7 @@ export async function DELETE(req: Request) {
 
     if (!id) return NextResponse.json({ error: 'ID is required' }, { status: 400 });
 
-    await prisma.$executeRawUnsafe(`DELETE FROM Expense WHERE id = ?`, id);
+    await prisma.$executeRawUnsafe(`DELETE FROM "Expense" WHERE id = $1`, id);
     return NextResponse.json({ success: true });
   } catch (err: any) {
     return NextResponse.json({ error: err.message }, { status: 400 });

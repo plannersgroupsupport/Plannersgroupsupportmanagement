@@ -8,15 +8,15 @@ export async function GET() {
     const records: any[] = await prisma.$queryRawUnsafe(`
       SELECT 
         cr.*, 
-        u.name as studentName, 
-        sp.admissionNo,
-        (SELECT url FROM File WHERE userId = u.id AND type = 'SSLC' ORDER BY uploadedAt DESC LIMIT 1) as sslcUrl,
-        (SELECT url FROM File WHERE userId = u.id AND type = 'PASSPORT_PHOTO' ORDER BY uploadedAt DESC LIMIT 1) as passportPhotoUrl,
-        (SELECT url FROM File WHERE userId = u.id AND type = 'PHOTO' ORDER BY uploadedAt DESC LIMIT 1) as profilePhotoUrl
-      FROM CertificateRecord cr
-      JOIN StudentProfile sp ON cr.studentProfileId = sp.id
-      JOIN User u ON sp.userId = u.id
-      ORDER BY cr.appliedAt DESC
+        u.name as "studentName", 
+        sp."admissionNo",
+        (SELECT url FROM "File" WHERE "userId" = u.id AND type = 'SSLC' ORDER BY "uploadedAt" DESC LIMIT 1) as "sslcUrl",
+        (SELECT url FROM "File" WHERE "userId" = u.id AND type = 'PASSPORT_PHOTO' ORDER BY "uploadedAt" DESC LIMIT 1) as "passportPhotoUrl",
+        (SELECT url FROM "File" WHERE "userId" = u.id AND type = 'PHOTO' ORDER BY "uploadedAt" DESC LIMIT 1) as "profilePhotoUrl"
+      FROM "CertificateRecord" cr
+      JOIN "StudentProfile" sp ON cr."studentProfileId" = sp.id
+      JOIN "User" u ON sp."userId" = u.id
+      ORDER BY cr."appliedAt" DESC
     `);
     return NextResponse.json(records);
   } catch (err: any) {
@@ -36,7 +36,7 @@ export async function POST(req: Request) {
 
     // ELIGIBILITY CHECK: Student must be "Completed"
     const profile: any[] = await prisma.$queryRawUnsafe(
-      'SELECT currentStatus FROM StudentProfile WHERE id = ?',
+      'SELECT "currentStatus" FROM "StudentProfile" WHERE id = $1',
       studentProfileId
     );
 
@@ -48,7 +48,7 @@ export async function POST(req: Request) {
 
     // CHECK IF ALREADY APPLIED
     const existing: any[] = await prisma.$queryRawUnsafe(
-      'SELECT id FROM CertificateRecord WHERE studentProfileId = ? AND type = ? AND status = "APPLIED"',
+      'SELECT id FROM "CertificateRecord" WHERE "studentProfileId" = $1 AND type = $2 AND status = \'APPLIED\'',
       studentProfileId, type || 'ALL'
     );
 
@@ -60,8 +60,8 @@ export async function POST(req: Request) {
     const now = new Date().toISOString();
 
     await prisma.$executeRawUnsafe(
-      `INSERT INTO CertificateRecord (id, studentProfileId, type, status, appliedAt, createdAt, updatedAt) 
-       VALUES (?, ?, ?, ?, ?, ?, ?)`,
+      `INSERT INTO "CertificateRecord" (id, "studentProfileId", type, status, "appliedAt", "createdAt", "updatedAt") 
+       VALUES ($1, $2, $3, $4, $5, $6, $7)`,
       id, studentProfileId, type || 'ALL', 'APPLIED', now, now, now
     );
 
@@ -83,12 +83,12 @@ export async function PATCH(req: Request) {
 
     if (status === 'ISSUED') {
       await prisma.$executeRawUnsafe(
-        `UPDATE CertificateRecord SET status = "ISSUED", issuedAt = ?, type = ?, updatedAt = ? WHERE id = ?`,
+        `UPDATE "CertificateRecord" SET status = 'ISSUED', "issuedAt" = $1, type = $2, "updatedAt" = $3 WHERE id = $4`,
         now, type, now, id
       );
     } else {
       await prisma.$executeRawUnsafe(
-        `UPDATE CertificateRecord SET status = ?, updatedAt = ? WHERE id = ?`,
+        `UPDATE "CertificateRecord" SET status = $1, "updatedAt" = $2 WHERE id = $3`,
         status, now, id
       );
     }
@@ -108,7 +108,7 @@ export async function DELETE(req: Request) {
   
       if (!id) return NextResponse.json({ error: 'ID is required' }, { status: 400 });
   
-      await prisma.$executeRawUnsafe(`DELETE FROM CertificateRecord WHERE id = ?`, id);
+      await prisma.$executeRawUnsafe(`DELETE FROM "CertificateRecord" WHERE id = $1`, id);
       return NextResponse.json({ success: true });
     } catch (err: any) {
       return NextResponse.json({ error: err.message }, { status: 400 });
