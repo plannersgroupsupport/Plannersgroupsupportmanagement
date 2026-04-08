@@ -21,7 +21,9 @@ export async function GET() {
 
 export async function POST(req: Request) {
   try {
-    const { companyName, logoUrl } = await req.json();
+    const body = await req.json();
+    console.log('Incoming Settings Update:', body);
+    const { companyName, logoUrl } = body;
 
     const settings = await prisma.systemSettings.upsert({
       where: { id: 'singleton' },

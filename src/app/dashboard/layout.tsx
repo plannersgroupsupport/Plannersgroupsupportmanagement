@@ -8,6 +8,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const [name, setName] = useState<string>('');
   const [loading, setLoading] = useState(true);
   const [settings, setSettings] = useState<any>(null);
+  const [profileData, setProfileData] = useState<any>(null);
   const router = useRouter();
   const pathname = usePathname();
 
@@ -25,7 +26,13 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         const decoded = JSON.parse(decodeURIComponent(authCookie.split('=')[1]));
         setRole(decoded.role);
         setName(decoded.name);
-      } catch {
+        
+        // Fetch full profile to get the photo
+        const profileRes = await fetch(`/api/profile?userId=${decoded.id}`);
+        const pData = await profileRes.json();
+        setProfileData(pData);
+      } catch (e) {
+        console.error('Session error', e);
         router.push('/');
       }
       setLoading(false);
@@ -88,22 +95,21 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     <div style={{ display: 'flex', minHeight: '100vh', background: 'var(--background)', color: 'var(--foreground)', position: 'relative', overflow: 'hidden' }}>
       
       {/* Background Watermark Logo */}
-      {/* Background Watermark Logo - Moved inside main or made relative */}
       {settings?.logoUrl && (
           <img 
             src={settings.logoUrl} 
             alt="Watermark" 
             style={{ 
                 position: 'fixed', 
-                top: '55%', 
-                left: '60%', 
+                top: '50%', 
+                left: '50%', 
                 transform: 'translate(-50%, -50%)', 
-                width: 'min(60vw, 800px)', 
+                width: 'min(70vw, 700px)', 
                 height: 'auto', 
-                opacity: 0.1, 
-                zIndex: 1, 
+                opacity: 0.08, 
+                zIndex: 0, 
                 pointerEvents: 'none',
-                filter: 'grayscale(1) brightness(1.2)'
+                filter: 'grayscale(1)'
             }} 
           />
       )}
@@ -170,10 +176,10 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
         <div style={{ padding: '1.5rem', borderTop: '1px solid var(--border)' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1rem' }}>
-             {/* Admin Profile Photo Fallback to Logo */}
+             {/* Dynamic Profile Photo Fetching */}
              <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: 'var(--primary)', overflow: 'hidden', border: '2px solid white', boxShadow: '0 2px 4px rgba(0,0,0,0.1)' }}>
                 <img 
-                    src={role === 'SUPERADMIN' ? (settings?.logoUrl || '/placeholder-profile.png') : '/placeholder-profile.png'} 
+                    src={profileData?.fileUploads?.[0]?.url || (role === 'SUPERADMIN' ? settings?.logoUrl : '/placeholder-profile.png') || '/placeholder-profile.png'} 
                     alt="User" 
                     style={{ width: '100%', height: '100%', objectFit: 'cover' }} 
                 />
@@ -190,7 +196,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       </aside>
 
       {/* Main Content */}
-      <main style={{ flex: 1, padding: '2.5rem', overflowY: 'auto', zIndex: 5 }}>
+      <main style={{ flex: 1, padding: '2.5rem', overflowY: 'auto', zIndex: 5, background: 'transparent' }}>
         {children}
       </main>
     </div>
