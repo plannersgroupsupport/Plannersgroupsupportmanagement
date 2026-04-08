@@ -72,6 +72,7 @@ export async function POST(req: Request) {
            fatherPhone: data.fatherPhone,
            address: data.address,
            district: data.district,
+           taluk: data.taluk,
            pincode: data.pincode,
            packageType: data.packageType || 'BASIC',
            totalCourseFee: data.packageType === 'PREMIUM' ? 65000 : 35000,
@@ -138,6 +139,7 @@ export async function PATCH(req: Request) {
       safeAssign('fatherPhone', updateData.fatherPhone);
       safeAssign('address', updateData.address);
       safeAssign('district', updateData.district);
+      safeAssign('taluk', updateData.taluk);
       safeAssign('pincode', updateData.pincode);
       safeAssign('packageType', updateData.packageType);
       

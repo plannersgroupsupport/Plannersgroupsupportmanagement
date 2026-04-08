@@ -25,6 +25,7 @@ export default function RegisterPage() {
     fatherPhone: '',
     address: '',
     district: '',
+    taluk: '',
     pincode: '',
     packageType: 'BASIC',
     courses: [] as string[]
@@ -202,8 +203,9 @@ export default function RegisterPage() {
                       <h2 style={{ fontSize: '1.25rem', fontWeight: '800', marginBottom: '1.5rem' }}>4. Residential Address</h2>
                       <div style={{ display: 'grid', gap: '1.25rem' }}>
                           <textarea placeholder="Full Address with Street & Door No*" required value={formData.address} onChange={e => setFormData({...formData, address: e.target.value})} style={{ width: '100%', padding: '1rem', borderRadius: '12px', border: '1px solid #e2e8f0', minHeight: '120px', fontSize: '1rem' }} />
-                          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '1rem' }}>
                               <FloatInput label="District" required value={formData.district} onChange={e => setFormData({...formData, district: e.target.value})} />
+                              <FloatInput label="Taluk" required value={formData.taluk} onChange={e => setFormData({...formData, taluk: e.target.value})} />
                               <FloatInput label="Pincode" required value={formData.pincode} onChange={e => setFormData({...formData, pincode: e.target.value})} />
                           </div>
                       </div>
@@ -218,6 +220,7 @@ export default function RegisterPage() {
                           if (step === 1 && (!formData.name || !formData.dob || !formData.admissionNo)) { alert('Please fill all identity details'); return; }
                           if (step === 2 && (!formData.collegeName || formData.courses.length === 0)) { alert('Please choose college and at least one course'); return; }
                           if (step === 3 && (!formData.phone || !formData.email || !formData.fatherName || !formData.fatherPhone)) { alert('Please provide contact and family info'); return; }
+                          if (step === 4 && (!formData.address || !formData.district || !formData.taluk || !formData.pincode)) { alert('Please provide residential address and taluk'); return; }
                           setStep(step + 1);
                       }} style={{ flex: 2, padding: '1rem', background: 'var(--primary)', color: 'white', borderRadius: '12px', fontWeight: 'bold', border: 'none', cursor: 'pointer' }}>Next Step</button>
                   ) : (

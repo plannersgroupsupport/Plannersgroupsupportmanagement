@@ -35,6 +35,7 @@ export default function StudentsPage() {
     fatherPhone: '',
     address: '',
     district: '',
+    taluk: '',
     pincode: '',
     isPlaced: false,
     placedAt: '',
@@ -146,6 +147,7 @@ export default function StudentsPage() {
       fatherPhone: profile?.fatherPhone || '',
       address: profile?.address || '',
       district: profile?.district || '',
+      taluk: profile?.taluk || '',
       pincode: profile?.pincode || '',
       isPlaced: profile?.isPlaced || false,
       placedAt: profile?.placedAt || '',
@@ -553,8 +555,9 @@ export default function StudentsPage() {
                     <FloatInput label="Father's Number" value={formData.fatherPhone} onChange={e => handlePhoneChange(e, 'fatherPhone')} />
                 </div>
                 <textarea placeholder="Full Address" value={formData.address} onChange={e => setFormData({...formData, address: e.target.value})} style={{ width: '100%', padding: '0.75rem', borderRadius: '8px', border: '1px solid var(--border)', height: '80px' }} />
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '0.5rem' }}>
                     <FloatInput label="District" value={formData.district} onChange={e => setFormData({...formData, district: e.target.value})} />
+                    <FloatInput label="Taluk" value={formData.taluk} onChange={e => setFormData({...formData, taluk: e.target.value})} />
                     <FloatInput label="Pincode" value={formData.pincode} onChange={e => setFormData({...formData, pincode: e.target.value})} />
                 </div>
 
@@ -708,7 +711,7 @@ export default function StudentsPage() {
                           <div style={{ padding: '1rem', background: '#f8fafc', borderRadius: '8px', minHeight: '100px' }}>
                               <p style={{ margin: 0, fontSize: '0.9rem', lineHeight: '1.5' }}>{profile?.address || 'Address not registered'}</p>
                               <div style={{ marginTop: '0.5rem', fontWeight: 'bold', fontSize: '0.85rem' }}>
-                                {profile?.district}, {profile?.pincode}
+                                {profile?.taluk ? `${profile.taluk}, ` : ''}{profile?.district}, {profile?.pincode}
                               </div>
                           </div>
                       </div>

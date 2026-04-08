@@ -43,6 +43,7 @@ model StudentProfile {
   fatherPhone     String?   // New field for parent contact
   address         String?
   district        String?
+  taluk           String?
   pincode         String?
   packageType     String    // PREMIUM, BASIC
   totalCourseFee  Float?    // Accountant override total payable amount

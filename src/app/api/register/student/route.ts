@@ -18,11 +18,12 @@ export async function POST(request: Request) {
     const fatherPhone = data.fatherPhone?.trim();
     const address = data.address?.trim();
     const district = data.district?.trim();
+    const taluk = data.taluk?.trim();
     const pincode = data.pincode?.trim();
     const collegeName = data.collegeName?.trim();
     const courses = data.courses;
 
-    if (!name || !admissionNo || !dob || !email || !phone || !fatherName || !fatherPhone || !address || !district || !pincode || !collegeName || !courses || courses.length === 0) {
+    if (!name || !admissionNo || !dob || !email || !phone || !fatherName || !fatherPhone || !address || !district || !taluk || !pincode || !collegeName || !courses || courses.length === 0) {
       return NextResponse.json({ error: 'Every detail is mandatory. Please provide all information including academic, family, and residential data.' }, { status: 400 });
     }
 
@@ -83,6 +84,7 @@ export async function POST(request: Request) {
             fatherPhone: data.fatherPhone,
             address: data.address,
             district: data.district,
+            taluk: data.taluk,
             pincode: data.pincode,
             packageType: data.packageType || 'BASIC'
           }

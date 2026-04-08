@@ -28,7 +28,8 @@ export async function POST(req: Request) {
 
     // Link file to user in Database if userId and type are provided
     if (userId && type) {
-      const dbFile = await (prisma as any).file.create({
+      console.log('Saving file record to DB...', { userId, type, fileUrl });
+      const dbFile = await prisma.file.create({
          data: {
              userId: userId,
              type: type,
