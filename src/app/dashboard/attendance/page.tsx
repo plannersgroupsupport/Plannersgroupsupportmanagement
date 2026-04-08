@@ -314,7 +314,7 @@ export default function AttendancePage() {
                           <AttendanceMarker 
                             status={status} 
                             loading={markingCell === `${student.id}-${dateKey}`}
-                            onMark={(s) => handleMarkAttendance(student.id, dateKey, s)}
+                            onMark={(s: string) => handleMarkAttendance(student.id, dateKey, s)}
                             onOpenOptions={() => setPopover({ userId: student.id, dateKey })}
                             activePopover={popover?.userId === student.id && popover?.dateKey === dateKey}
                           />
