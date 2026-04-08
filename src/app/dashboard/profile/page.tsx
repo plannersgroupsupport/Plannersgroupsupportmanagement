@@ -159,7 +159,8 @@ export default function ProfilePage() {
     if (loading) return <div style={{ padding: '2rem', textAlign: 'center' }}>Loading profile...</div>;
     if (!user) return <div style={{ padding: '2rem', textAlign: 'center' }}>Could not load profile. Please login again.</div>;
 
-    const profilePhoto = user.fileUploads?.find((f: any) => f.type === 'PHOTO')?.url || '/placeholder-profile.png';
+    const uploadedPhoto = user.fileUploads?.find((f: any) => f.type === 'PHOTO')?.url;
+    const profilePhoto = uploadedPhoto || (user.role === 'SUPERADMIN' ? (logoUrl || '/placeholder-profile.png') : '/placeholder-profile.png');
     const sProfile = user.studentProfile?.[0] || user.studentProfile; 
 
     return (

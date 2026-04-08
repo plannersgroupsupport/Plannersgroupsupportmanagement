@@ -88,20 +88,22 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     <div style={{ display: 'flex', minHeight: '100vh', background: 'var(--background)', color: 'var(--foreground)', position: 'relative', overflow: 'hidden' }}>
       
       {/* Background Watermark Logo */}
+      {/* Background Watermark Logo - Moved inside main or made relative */}
       {settings?.logoUrl && (
           <img 
             src={settings.logoUrl} 
             alt="Watermark" 
             style={{ 
                 position: 'fixed', 
-                top: '50%', 
-                left: '50%', 
+                top: '55%', 
+                left: '60%', 
                 transform: 'translate(-50%, -50%)', 
-                width: '600px', 
+                width: 'min(60vw, 800px)', 
                 height: 'auto', 
-                opacity: 0.07, 
-                zIndex: 0, 
-                pointerEvents: 'none'
+                opacity: 0.1, 
+                zIndex: 1, 
+                pointerEvents: 'none',
+                filter: 'grayscale(1) brightness(1.2)'
             }} 
           />
       )}
@@ -167,9 +169,19 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         </nav>
 
         <div style={{ padding: '1.5rem', borderTop: '1px solid var(--border)' }}>
-          <div style={{ marginBottom: '1rem', fontSize: '0.9rem' }}>
-             <div style={{ fontWeight: 'bold' }}>{name}</div>
-             <div style={{ color: '#64748b', fontSize: '0.8rem' }}>{role}</div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1rem' }}>
+             {/* Admin Profile Photo Fallback to Logo */}
+             <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: 'var(--primary)', overflow: 'hidden', border: '2px solid white', boxShadow: '0 2px 4px rgba(0,0,0,0.1)' }}>
+                <img 
+                    src={role === 'SUPERADMIN' ? (settings?.logoUrl || '/placeholder-profile.png') : '/placeholder-profile.png'} 
+                    alt="User" 
+                    style={{ width: '100%', height: '100%', objectFit: 'cover' }} 
+                />
+             </div>
+             <div style={{ fontSize: '0.9rem' }}>
+                <div style={{ fontWeight: 'bold', color: 'var(--foreground)' }}>{name}</div>
+                <div style={{ color: '#64748b', fontSize: '0.8rem' }}>{role}</div>
+             </div>
           </div>
           <button onClick={handleLogout} style={{ width: '100%', padding: '0.75rem', background: 'var(--surface)', border: '1px solid var(--error)', color: 'var(--error)' }}>
             Sign Out
