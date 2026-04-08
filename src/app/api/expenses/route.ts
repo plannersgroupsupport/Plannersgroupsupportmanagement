@@ -5,10 +5,10 @@ import crypto from 'crypto';
 // GET: Fetch all expenses and total revenue using raw SQL
 export async function GET() {
   try {
-    const [expenses, revenueData]: [any[], any[]] = await Promise.all([
+    const [expenses, revenueData] = (await Promise.all([
       prisma.$queryRawUnsafe(`SELECT * FROM Expense ORDER BY date DESC`),
       prisma.$queryRawUnsafe(`SELECT SUM(amount) as total FROM FeePayment`)
-    ]);
+    ])) as [any[], any[]];
 
     const totalRevenue = revenueData[0]?.total || 0;
     
