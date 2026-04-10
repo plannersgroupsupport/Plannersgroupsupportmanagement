@@ -133,17 +133,25 @@ export default function AccountantFeesPage() {
 
     return (
         <div>
-           <h1 style={{ fontSize: '2rem', marginBottom: '1rem' }}>Collect Monthly Fees</h1>
+           <style>{`
+             @media (max-width: 768px) {
+               .fees-header { flex-direction: column !important; align-items: flex-start !important; gap: 0.75rem !important; }
+               .fees-search { width: 100% !important; }
+               .fees-h1 { font-size: 1.5rem !important; }
+             }
+           `}</style>
+           <h1 className="fees-h1" style={{ fontSize: '2rem', marginBottom: '1rem' }}>Collect Monthly Fees</h1>
            <p style={{ color: '#64748b', marginBottom: '2rem' }}>Accountant Dashboard - Real calendar months automatically generated relative to each student&apos;s exact Admission Date.</p>
 
            <div className="card">
-             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+             <div className="fees-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
                  <h3 style={{ color: 'var(--primary)' }}>Active Student Directory</h3>
                  <input 
                      type="text" 
                      placeholder="Search by Name or ID..." 
                      value={searchTerm}
                      onChange={e => setSearchTerm(e.target.value)}
+                     className="fees-search"
                      style={{ padding: '0.6rem', border: '1px solid var(--border)', borderRadius: '6px', width: '300px' }}
                  />
              </div>

@@ -53,12 +53,20 @@ export default function StaffPage() {
 
   return (
     <div>
-      <h1 style={{ fontSize: '2.5rem', marginBottom: '2rem', fontWeight: '800', background: 'linear-gradient(135deg, var(--primary), #4c6ef5)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>Staff Management</h1>
+      <style>{`
+        @media (max-width: 768px) {
+          .staff-grid { grid-template-columns: 1fr !important; }
+          .staff-h1 { font-size: 1.6rem !important; }
+          .staff-card-header { flex-direction: column !important; align-items: flex-start !important; gap: 0.75rem !important; }
+          .staff-card-header input { width: 100% !important; }
+        }
+      `}</style>
+      <h1 className="staff-h1" style={{ fontSize: '2.5rem', marginBottom: '2rem', fontWeight: '800', background: 'linear-gradient(135deg, var(--primary), #4c6ef5)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>Staff Management</h1>
       
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 350px', gap: '2rem', alignItems: 'start' }}>
+      <div className="staff-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 350px', gap: '2rem', alignItems: 'start' }}>
         
         <div className="card" style={{ padding: 0, overflow: 'hidden' }}>
-            <div style={{ padding: '1.5rem', borderBottom: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div className="staff-card-header" style={{ padding: '1.5rem', borderBottom: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <h3 style={{ margin: 0 }}>Administrative Directory</h3>
                 <input 
                     type="text" 

@@ -165,10 +165,19 @@ export default function ProfilePage() {
 
     return (
         <div>
-            <h1 style={{ fontSize: '2rem', marginBottom: '1rem' }}>My Profile</h1>
+            <style>{`
+              @media (max-width: 768px) {
+                .profile-grid { grid-template-columns: 1fr !important; }
+                .profile-reg-grid { grid-template-columns: 1fr 1fr !important; }
+                .profile-admin-grid { grid-template-columns: 1fr !important; }
+                .profile-pw-form { grid-template-columns: 1fr !important; }
+                .profile-h1 { font-size: 1.5rem !important; }
+              }
+            `}</style>
+            <h1 className="profile-h1" style={{ fontSize: '2rem', marginBottom: '1rem' }}>My Profile</h1>
             <p style={{ color: '#64748b', marginBottom: '2rem' }}>Manage your account settings and view your academic registration details.</p>
 
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: '2rem' }}>
+            <div className="profile-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: '2rem' }}>
                 {/* Profile Photo Section */}
                 <div className="card" style={{ textAlign: 'center' }}>
                     <div style={{ position: 'relative', width: '150px', height: '150px', margin: '0 auto 1.5rem', borderRadius: '50%', overflow: 'hidden', border: '3px solid var(--primary)' }}>
@@ -214,7 +223,7 @@ export default function ProfilePage() {
                 {/* Account Details Section */}
                 <div className="card">
                     <h3 style={{ borderBottom: '1px solid var(--border)', paddingBottom: '0.5rem', marginBottom: '1.5rem', color: 'var(--primary)' }}>Registration Details</h3>
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
+                    <div className="profile-reg-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
                         <div>
                             <p style={{ color: '#64748b', fontSize: '0.8rem', textTransform: 'uppercase', marginBottom: '0.2rem' }}>Full Name</p>
                             <p style={{ fontWeight: 'bold' }}>{user.name}</p>
@@ -257,7 +266,7 @@ export default function ProfilePage() {
                     <div className="card" style={{ gridColumn: '1 / -1', borderTop: '4px solid var(--primary)' }}>
                         <h3 style={{ borderBottom: '1px solid var(--border)', paddingBottom: '0.5rem', marginBottom: '1.5rem', color: 'var(--primary)' }}>Administrative Identity & Branding</h3>
                         
-                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem' }}>
+                        <div className="profile-admin-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem' }}>
                             {/* Change Login ID */}
                             <form onSubmit={handleLoginIdChange}>
                                 <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem', fontWeight: 'bold' }}>Change Admin Login ID</label>
@@ -295,7 +304,7 @@ export default function ProfilePage() {
                 {/* Password Change Section */}
                 <div className="card" style={{ gridColumn: '1 / -1' }}>
                     <h3 style={{ borderBottom: '1px solid var(--border)', paddingBottom: '0.5rem', marginBottom: '1.5rem', color: 'var(--primary)' }}>Security Credentials</h3>
-                    <form onSubmit={handlePasswordChange} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem', alignItems: 'end' }}>
+                    <form onSubmit={handlePasswordChange} className="profile-pw-form" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem', alignItems: 'end' }}>
                         <div>
                             <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem' }}>New Password</label>
                             <input 

@@ -159,9 +159,15 @@ export default function CertificatesPage() {
 
     return (
         <div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
+            <style>{`
+              @media (max-width: 768px) {
+                .cert-header { flex-direction: column !important; align-items: flex-start !important; gap: 0.75rem !important; }
+                .cert-h1 { font-size: 1.5rem !important; }
+              }
+            `}</style>
+            <div className="cert-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
                 <div>
-                   <h1 style={{ fontSize: '2.5rem', fontWeight: '800', margin: 0 }}>Financial & Certificate Registry</h1>
+                   <h1 className="cert-h1" style={{ fontSize: '2.5rem', fontWeight: '800', margin: 0 }}>Financial & Certificate Registry</h1>
                    <p style={{ color: '#64748b' }}>Process student certificate applications and track issuance categories.</p>
                 </div>
                 <button onClick={downloadReport} className="btn-primary" style={{ padding: '0.8rem 1.5rem', borderRadius: '12px', background: '#3b82f6' }}>

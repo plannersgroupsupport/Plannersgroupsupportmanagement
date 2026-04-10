@@ -54,7 +54,13 @@ export default function StudentProgress() {
 
   return (
     <div>
-      <h1 style={{ fontSize: '2rem', marginBottom: '1rem' }}>My Progress & Documents</h1>
+      <style>{`
+        @media (max-width: 768px) {
+          .prog-grid { grid-template-columns: 1fr !important; }
+          .prog-h1 { font-size: 1.5rem !important; }
+        }
+      `}</style>
+      <h1 className="prog-h1" style={{ fontSize: '2rem', marginBottom: '1rem' }}>My Progress & Documents</h1>
       
       <div style={{ background: '#fff9db', border: '1px solid #fcc419', color: '#856404', padding: '1rem', borderRadius: '6px', marginBottom: '2rem', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
         <span style={{ fontSize: '1.2rem' }}>⚠️</span>
@@ -63,7 +69,7 @@ export default function StudentProgress() {
         </p>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem', marginBottom: '2rem' }}>
+      <div className="prog-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem', marginBottom: '2rem' }}>
           {/* SSLC Upload Section */}
           <div className="card">
             <h3 style={{ color: 'var(--primary)', marginBottom: '0.5rem' }}>SSLC Certificate (PDF)</h3>

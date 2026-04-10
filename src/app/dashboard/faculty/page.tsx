@@ -49,12 +49,20 @@ export default function FacultyPage() {
 
   return (
     <div>
-      <h1 style={{ fontSize: '2.5rem', marginBottom: '2rem', fontWeight: '800', background: 'linear-gradient(135deg, var(--primary), #4c6ef5)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>Faculty Management</h1>
+      <style>{`
+        @media (max-width: 768px) {
+          .fac-grid { grid-template-columns: 1fr !important; }
+          .fac-h1 { font-size: 1.6rem !important; }
+          .fac-card-header { flex-direction: column !important; align-items: flex-start !important; gap: 0.75rem !important; }
+          .fac-card-header input { width: 100% !important; }
+        }
+      `}</style>
+      <h1 className="fac-h1" style={{ fontSize: '2.5rem', marginBottom: '2rem', fontWeight: '800', background: 'linear-gradient(135deg, var(--primary), #4c6ef5)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>Faculty Management</h1>
       
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 350px', gap: '2rem', alignItems: 'start' }}>
+      <div className="fac-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 350px', gap: '2rem', alignItems: 'start' }}>
         
         <div className="card" style={{ padding: 0, overflow: 'hidden' }}>
-            <div style={{ padding: '1.5rem', borderBottom: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div className="fac-card-header" style={{ padding: '1.5rem', borderBottom: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <h3 style={{ margin: 0 }}>Faculty Roster</h3>
                 <input 
                     type="text" 

@@ -95,6 +95,14 @@ export default function FacultyNotesPage() {
 
   return (
     <div>
+      <style>{`
+        @media (max-width: 768px) {
+          .notes-upload-form { grid-template-columns: 1fr !important; }
+          .notes-item { flex-direction: column !important; align-items: flex-start !important; gap: 0.75rem !important; }
+          .notes-item-actions { width: 100%; display: flex; gap: 0.5rem; }
+          .notes-item-actions a, .notes-item-actions button { flex: 1; text-align: center; }
+        }
+      `}</style>
       <h1 style={{ fontSize: '2rem', marginBottom: '1rem' }}>
         {role === 'STUDENT' ? 'Study Materials' : 'Upload Study Materials'}
       </h1>
@@ -106,7 +114,7 @@ export default function FacultyNotesPage() {
       <div className="card" style={{ marginBottom: '2rem' }}>
         <h3 style={{ color: 'var(--primary)', marginBottom: '0.5rem' }}>Distribute File</h3>
         <p style={{ color: '#64748b', fontSize: '0.9rem', marginBottom: '1rem' }}>Max file size: 10MB.</p>
-        <form onSubmit={handleUpload} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr auto', gap: '1rem', alignItems: 'end' }}>
+        <form onSubmit={handleUpload} className="notes-upload-form" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr auto', gap: '1rem', alignItems: 'end' }}>
           <div>
             <label style={{ fontSize: '0.8rem', fontWeight: 'bold', color: '#64748b', display: 'block', marginBottom: '0.5rem' }}>Assignment Course</label>
             <select 
@@ -140,7 +148,7 @@ export default function FacultyNotesPage() {
         ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                 {notes.map(note => (
-                    <div key={note.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '1rem', border: '1px solid var(--border)', borderRadius: '8px', background: '#f8fafc' }}>
+                    <div key={note.id} className="notes-item" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '1rem', border: '1px solid var(--border)', borderRadius: '8px', background: '#f8fafc' }}>
                         <div>
                             <div style={{ fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                                 {note.url.split('-').slice(1).join('-') || note.url.split('/').pop()}
@@ -152,7 +160,7 @@ export default function FacultyNotesPage() {
                                 Uploaded by {note.user?.name || 'System'} on {new Date(note.uploadedAt).toLocaleDateString()}
                             </div>
                         </div>
-                        <div style={{ display: 'flex', gap: '0.5rem' }}>
+                        <div className="notes-item-actions" style={{ display: 'flex', gap: '0.5rem' }}>
                             <a href={note.url} target="_blank" rel="noopener noreferrer" style={{ background: 'white', border: '1px solid var(--border)', padding: '0.5rem 1rem', borderRadius: '4px', textDecoration: 'none', color: 'var(--primary)', fontSize: '0.9rem', fontWeight: 'bold' }}>
                                 {role === 'STUDENT' ? 'Download' : 'View File'}
                             </a>

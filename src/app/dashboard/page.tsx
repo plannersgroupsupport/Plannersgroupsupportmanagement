@@ -71,9 +71,16 @@ export default async function DashboardPage() {
 
       return (
         <div style={{ padding: '0', maxWidth: '1200px', margin: '0 auto', fontFamily: 'system-ui, -apple-system, sans-serif' }}>
+          <style>{`
+            @media (max-width: 768px) {
+              .dash-grid { grid-template-columns: 1fr !important; }
+              .course-grid { grid-template-columns: 1fr !important; }
+              .dash-h1 { font-size: 1.6rem !important; }
+            }
+          `}</style>
           
           {/* Main Layout Grid */}
-          <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 2fr) minmax(0, 1fr)', gap: '2rem', alignItems: 'start' }}>
+          <div className="dash-grid" style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 2fr) minmax(0, 1fr)', gap: '2rem', alignItems: 'start' }}>
               
               {/* LEFT COLUMN */}
               <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
@@ -90,7 +97,7 @@ export default async function DashboardPage() {
                   }}>
                       <div style={{ position: 'relative', zIndex: 2 }}>
                           <div style={{ fontSize: '0.85rem', opacity: 0.8, marginBottom: '1rem', fontWeight: 500 }}>{new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}</div>
-                          <h1 style={{ fontSize: '2.2rem', margin: '0 0 0.5rem 0', fontWeight: '800' }}>Welcome back, {studentData?.name.split(' ')[0] || 'Student'}!</h1>
+                          <h1 className="dash-h1" style={{ fontSize: '2.2rem', margin: '0 0 0.5rem 0', fontWeight: '800' }}>Welcome back, {studentData?.name.split(' ')[0] || 'Student'}!</h1>
                           <p style={{ margin: 0, opacity: 0.9, fontSize: '0.95rem' }}>Always stay updated in your student portal</p>
                       </div>
                       
@@ -105,7 +112,7 @@ export default async function DashboardPage() {
                           <h3 style={{ fontSize: '1.2rem', fontWeight: 'bold', margin: 0, color: 'var(--foreground)' }}>Enrolled Courses</h3>
                           <Link href="/dashboard/progress" style={{ color: 'var(--primary)', fontSize: '0.95rem', fontWeight: '700', textDecoration: 'none' }}>See all</Link>
                       </div>
-                      <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 1fr)', gap: '1.5rem' }}>
+                      <div className="course-grid" style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 1fr)', gap: '1.5rem' }}>
                           {courses.length > 0 ? courses.map((course: string, i: number) => {
                               const bgs = [
                                   `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%239C92AC' fill-opacity='0.1'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E"), linear-gradient(135deg, #f5f3ff, #ede9fe)`,
@@ -221,7 +228,7 @@ export default async function DashboardPage() {
   // Fallback / Admin Dashboard
   return (
     <div>
-      <h1 style={{ fontSize: '2.5rem', marginBottom: '1rem', color: 'var(--foreground)', fontWeight: '800' }}>
+      <h1 className="dash-h1" style={{ fontSize: '2.5rem', marginBottom: '1rem', color: 'var(--foreground)', fontWeight: '800' }}>
         Welcome, {userPayload?.name || userPayload?.role || 'User'}!
       </h1>
       <p style={{ color: '#64748b', marginBottom: '2.5rem', fontSize: '1.1rem' }}>

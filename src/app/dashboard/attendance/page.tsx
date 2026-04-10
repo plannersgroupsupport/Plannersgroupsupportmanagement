@@ -198,13 +198,23 @@ export default function AttendancePage() {
 
   return (
     <div style={{ padding: '0 1rem' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: '2rem', flexWrap: 'wrap', gap: '1rem' }}>
+      <style>{`
+        @media (max-width: 768px) {
+          .att-header { flex-direction: column !important; align-items: flex-start !important; }
+          .att-actions { flex-wrap: wrap !important; width: 100%; }
+          .att-actions button { flex: 1; min-width: 140px; font-size: 0.8rem !important; padding: 0.6rem 0.75rem !important; }
+          .att-h1 { font-size: 1.6rem !important; }
+          .att-controls { flex-direction: column !important; align-items: stretch !important; }
+          .att-controls > div { width: 100% !important; }
+        }
+      `}</style>
+      <div className="att-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: '2rem', flexWrap: 'wrap', gap: '1rem' }}>
         <div>
-          <h1 style={{ fontSize: '2.5rem', margin: 0, fontWeight: '800', background: 'linear-gradient(135deg, var(--primary), #4c6ef5)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>Attendance Registry</h1>
+          <h1 className="att-h1" style={{ fontSize: '2.5rem', margin: 0, fontWeight: '800', background: 'linear-gradient(135deg, var(--primary), #4c6ef5)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>Attendance Registry</h1>
           <p style={{ color: '#64748b', marginTop: '0.5rem' }}>Track and manage student presence across the institution.</p>
         </div>
         
-        <div style={{ display: 'flex', gap: '0.75rem' }}>
+        <div className="att-actions" style={{ display: 'flex', gap: '0.75rem' }}>
           <button 
             onClick={() => {
                 const m = weekStart.getMonth() + 1;
@@ -221,7 +231,7 @@ export default function AttendancePage() {
       </div>
 
       {/* Controls */}
-      <div className="card" style={{ padding: '1.25rem', marginBottom: '1.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
+      <div className="card att-controls" style={{ padding: '1.25rem', marginBottom: '1.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
         <div style={{ display: 'flex', gap: '1rem', flex: 1, minWidth: '300px' }}>
           <input 
             type="text" 

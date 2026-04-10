@@ -261,10 +261,20 @@ export default function StudentsPage() {
 
   return (
     <div style={{ position: 'relative' }}>
-      <h1 style={{ fontSize: '2.5rem', marginBottom: '2rem', fontWeight: '800', background: 'linear-gradient(135deg, var(--primary), #4c6ef5)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>Student Management</h1>
+      <style>{`
+        @media (max-width: 768px) {
+          .students-grid { grid-template-columns: 1fr !important; }
+          .students-h1 { font-size: 1.6rem !important; }
+          .modal-detail-grid { grid-template-columns: 1fr !important; gap: 1rem !important; }
+          .search-bar-row { flex-direction: column !important; }
+          .tab-btns { width: 100%; justify-content: stretch !important; }
+          .tab-btns button { flex: 1; text-align: center; }
+        }
+      `}</style>
+      <h1 className="students-h1" style={{ fontSize: '2.5rem', marginBottom: '2rem', fontWeight: '800', background: 'linear-gradient(135deg, var(--primary), #4c6ef5)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>Student Management</h1>
       
       {/* Search Bar */}
-      <div style={{ marginBottom: '2rem', display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
+      <div className="search-bar-row" style={{ marginBottom: '2rem', display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
           <input 
               type="text" 
               placeholder="Search by Name, ID, or Admission No..." 
@@ -282,7 +292,7 @@ export default function StudentsPage() {
               <option value="lab">Sort By: Lab Number</option>
           </select>
           {role === 'SUPERADMIN' && (
-              <div style={{ display: 'flex', gap: '0.5rem', background: 'white', padding: '0.25rem', borderRadius: '12px', border: '1px solid var(--border)' }}>
+              <div className="tab-btns" style={{ display: 'flex', gap: '0.5rem', background: 'white', padding: '0.25rem', borderRadius: '12px', border: '1px solid var(--border)' }}>
                   <button 
                     onClick={() => setActiveTab('STUDENTS')}
                     style={{ padding: '0.75rem 1.5rem', borderRadius: '10px', border: 'none', background: activeTab === 'STUDENTS' ? 'var(--primary)' : 'transparent', color: activeTab === 'STUDENTS' ? 'white' : 'var(--foreground)', cursor: 'pointer', fontWeight: 'bold' }}
@@ -379,7 +389,7 @@ export default function StudentsPage() {
               </div>
           </div>
       ) : (
-      <div style={{ display: 'grid', gridTemplateColumns: role === 'SUPERADMIN' ? '1fr 400px' : '1fr', gap: '2rem', alignItems: 'start' }}>
+      <div className="students-grid" style={{ display: 'grid', gridTemplateColumns: role === 'SUPERADMIN' ? '1fr 400px' : '1fr', gap: '2rem', alignItems: 'start' }}>
         
         {/* Student List */}
         <div className="card" style={{ padding: 0, overflow: 'hidden' }}>
@@ -683,7 +693,7 @@ export default function StudentsPage() {
                       )}
                   </div>
 
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem' }}>
+                  <div className="modal-detail-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem' }}>
                       <div>
                           <SectionTitle title="Academic Profile" />
                           <div style={{ display: 'grid', gap: '0.75rem' }}>
@@ -705,7 +715,7 @@ export default function StudentsPage() {
                       </div>
                   </div>
 
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem', marginTop: '2rem' }}>
+                  <div className="modal-detail-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem', marginTop: '2rem' }}>
                       <div>
                           <SectionTitle title="Home Address" />
                           <div style={{ padding: '1rem', background: '#f8fafc', borderRadius: '8px', minHeight: '100px' }}>

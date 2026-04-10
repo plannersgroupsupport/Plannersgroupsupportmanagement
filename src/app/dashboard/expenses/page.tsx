@@ -156,9 +156,16 @@ export default function ExpensesPage() {
 
     return (
         <div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
+            <style>{`
+              @media (max-width: 768px) {
+                .exp-header { flex-direction: column !important; align-items: flex-start !important; gap: 0.75rem !important; }
+                .exp-h1 { font-size: 1.5rem !important; }
+                .exp-form-grid { grid-template-columns: 1fr !important; }
+              }
+            `}</style>
+            <div className="exp-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
                 <div>
-                   <h1 style={{ fontSize: '2.5rem', fontWeight: '800', margin: 0 }}>Financial Registry</h1>
+                   <h1 className="exp-h1" style={{ fontSize: '2.5rem', fontWeight: '800', margin: 0 }}>Financial Registry</h1>
                    <p style={{ color: '#64748b' }}>Complete overview of Revenue vs. Institutional Expenditure.</p>
                 </div>
                 <button onClick={() => setShowForm(true)} className="btn-primary" style={{ padding: '0.8rem 1.5rem', borderRadius: '12px' }}>
@@ -265,7 +272,7 @@ export default function ExpensesPage() {
                                     onChange={e => setFormData({...formData, title: e.target.value})}
                                 />
                             </div>
-                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                            <div className="exp-form-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
                                 <div>
                                     <label style={{ display: 'block', fontSize: '0.85rem', marginBottom: '0.4rem', fontWeight: '600' }}>Category</label>
                                     <select className="input-field" value={formData.category} onChange={e => setFormData({...formData, category: e.target.value})}>
