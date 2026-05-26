@@ -25,6 +25,7 @@ export default function AttendancePage() {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [sortBy, setSortBy] = useState('none');
+  const [facultyLabNumber, setFacultyLabNumber] = useState<string | null>(null);
   
   // Date state: Start of the visible week
   const [weekStart, setWeekStart] = useState(() => {
@@ -77,6 +78,24 @@ export default function AttendancePage() {
         }
         setLoading(false); 
       });
+
+    // Get faculty lab from session
+    const cookies = document.cookie.split(';');
+    const authCookie = cookies.find(c => c.trim().startsWith('auth_token='));
+    if (authCookie) {
+      try {
+        const decoded = JSON.parse(decodeURIComponent(authCookie.split('=')[1]));
+        if (decoded.role === 'FACULTY' && decoded.id) {
+          fetch('/api/users?role=FACULTY')
+            .then(res => res.json())
+            .then((facultyList: any[]) => {
+              const me = facultyList.find((f: any) => f.id === decoded.id);
+              const labName = me?.facultyProfile?.lab?.name || null;
+              setFacultyLabNumber(labName);
+            });
+        }
+      } catch {}
+    }
   }, []);
 
   useEffect(() => {
@@ -190,9 +209,16 @@ export default function AttendancePage() {
       s.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
       s.loginId.toLowerCase().includes(searchTerm.toLowerCase())
     );
+    // Faculty: only show students in their assigned lab
+    if (facultyLabNumber) {
+      list = list.filter(s => {
+        const profile = Array.isArray(s.studentProfile) ? s.studentProfile[0] : s.studentProfile;
+        return profile?.labNumber === facultyLabNumber;
+      });
+    }
     if (sortBy === 'name') list.sort((a, b) => a.name.localeCompare(b.name));
     return list;
-  }, [students, searchTerm, sortBy]);
+  }, [students, searchTerm, sortBy, facultyLabNumber]);
 
   if (loading) return <div style={{ padding: '2rem', textAlign: 'center' }}>Loading student directory...</div>;
 
@@ -211,7 +237,14 @@ export default function AttendancePage() {
       <div className="att-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: '2rem', flexWrap: 'wrap', gap: '1rem' }}>
         <div>
           <h1 className="att-h1" style={{ fontSize: '2.5rem', margin: 0, fontWeight: '800', background: 'linear-gradient(135deg, var(--primary), #4c6ef5)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>Attendance Registry</h1>
-          <p style={{ color: '#64748b', marginTop: '0.5rem' }}>Track and manage student presence across the institution.</p>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginTop: '0.5rem', flexWrap: 'wrap' }}>
+            <p style={{ color: '#64748b', margin: 0 }}>Track and manage student presence.</p>
+            {facultyLabNumber && (
+              <span style={{ padding: '0.25rem 0.75rem', borderRadius: '20px', fontSize: '0.75rem', fontWeight: '700', background: '#eff6ff', color: '#1d4ed8', border: '1px solid #bfdbfe' }}>
+                🖥️ {facultyLabNumber} Only
+              </span>
+            )}
+          </div>
         </div>
         
         <div className="att-actions" style={{ display: 'flex', gap: '0.75rem' }}>

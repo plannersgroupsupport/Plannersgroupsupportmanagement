@@ -10,6 +10,7 @@ export default function StudentsPage() {
   const [sortBy, setSortBy] = useState('none');
   const [viewingStudent, setViewingStudent] = useState<any>(null);
   const [role, setRole] = useState<string | null>(null);
+  const [facultyLabNumber, setFacultyLabNumber] = useState<string | null>(null);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [resetRequests, setResetRequests] = useState<any[]>([]);
   const [activeTab, setActiveTab] = useState('STUDENTS'); // STUDENTS or RESETS
@@ -54,6 +55,16 @@ export default function StudentsPage() {
         try {
             const decoded = JSON.parse(decodeURIComponent(authCookie.split('=')[1]));
             setRole(decoded.role);
+            // If faculty, fetch their lab assignment
+            if (decoded.role === 'FACULTY' && decoded.id) {
+                fetch(`/api/users?role=FACULTY`)
+                  .then(res => res.json())
+                  .then((facultyList: any[]) => {
+                    const me = facultyList.find((f: any) => f.id === decoded.id);
+                    const labName = me?.facultyProfile?.lab?.name || null;
+                    setFacultyLabNumber(labName);
+                  });
+            }
             if (decoded.role === 'SUPERADMIN') {
                 fetch('/api/password-reset')
                     .then(res => res.json())
@@ -249,6 +260,14 @@ export default function StudentsPage() {
       (Array.isArray(s.studentProfile) ? s.studentProfile[0] : s.studentProfile)?.admissionNo?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
+  // Faculty: filter to only their assigned lab's students
+  if (role === 'FACULTY' && facultyLabNumber) {
+    filteredStudents = filteredStudents.filter(s => {
+      const profile = Array.isArray(s.studentProfile) ? s.studentProfile[0] : s.studentProfile;
+      return profile?.labNumber === facultyLabNumber;
+    });
+  }
+
   if (sortBy === 'lab') {
       filteredStudents.sort((a, b) => {
           const labA = (Array.isArray(a.studentProfile) ? a.studentProfile[0] : a.studentProfile)?.labNumber || '';
@@ -271,7 +290,19 @@ export default function StudentsPage() {
           .tab-btns button { flex: 1; text-align: center; }
         }
       `}</style>
-      <h1 className="students-h1" style={{ fontSize: '2.5rem', marginBottom: '2rem', fontWeight: '800', background: 'linear-gradient(135deg, var(--primary), #4c6ef5)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>Student Management</h1>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '2rem', flexWrap: 'wrap' }}>
+        <h1 className="students-h1" style={{ fontSize: '2.5rem', fontWeight: '800', background: 'linear-gradient(135deg, var(--primary), #4c6ef5)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', margin: 0 }}>Student Management</h1>
+        {role === 'FACULTY' && facultyLabNumber && (
+          <span style={{ padding: '0.35rem 1rem', borderRadius: '20px', fontSize: '0.8rem', fontWeight: '700', background: '#eff6ff', color: '#1d4ed8', border: '1px solid #bfdbfe' }}>
+            🖥️ Viewing: {facultyLabNumber} Students Only
+          </span>
+        )}
+        {role === 'FACULTY' && !facultyLabNumber && (
+          <span style={{ padding: '0.35rem 1rem', borderRadius: '20px', fontSize: '0.8rem', fontWeight: '700', background: '#fff7ed', color: '#c2410c', border: '1px solid #fed7aa' }}>
+            ⚠️ No Lab Assigned — Showing All Students
+          </span>
+        )}
+      </div>
       
       {/* Search Bar */}
       <div className="search-bar-row" style={{ marginBottom: '2rem', display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
