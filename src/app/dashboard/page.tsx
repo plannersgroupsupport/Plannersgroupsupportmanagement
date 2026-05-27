@@ -214,7 +214,6 @@ export default async function DashboardPage() {
                                       style={{
                                         width: '100%', height: '100%', objectFit: 'cover',
                                         pointerEvents: 'none',
-                                        WebkitUserDrag: 'none' as any,
                                         userSelect: 'none'
                                       }}
                                       onContextMenu={(e) => e.preventDefault()}
