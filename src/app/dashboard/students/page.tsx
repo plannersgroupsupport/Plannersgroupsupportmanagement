@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 
 export default function StudentsPage() {
   const [students, setStudents] = useState<any[]>([]);
@@ -279,11 +279,13 @@ export default function StudentsPage() {
   };
 
   // Academic Year filter: extract from admissionDate year
-  const availableYears = Array.from(new Set(students.map(s => {
-    const profile = Array.isArray(s.studentProfile) ? s.studentProfile[0] : s.studentProfile;
-    const yr = profile?.admissionDate ? new Date(profile.admissionDate).getFullYear() : null;
-    return yr ? `${yr}-${yr + 1}` : null;
-  }).filter(Boolean))) as string[];
+  const availableYears = useMemo(() => {
+    return Array.from(new Set(students.map(s => {
+      const profile = Array.isArray(s.studentProfile) ? s.studentProfile[0] : s.studentProfile;
+      const yr = profile?.admissionDate ? new Date(profile.admissionDate).getFullYear() : null;
+      return yr ? `${yr}-${yr + 1}` : null;
+    }).filter(Boolean))) as string[];
+  }, [students]);
 
   let filteredStudents = [...students].filter(s => 
       s.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
