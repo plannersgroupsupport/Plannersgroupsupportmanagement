@@ -49,7 +49,8 @@ export default function StudentsPage() {
   useEffect(() => {
     fetch('/api/users?role=STUDENT')
       .then(res => res.json())
-      .then(data => { setStudents(data); setLoading(false); });
+      .then(data => { setStudents(Array.isArray(data) ? data : []); setLoading(false); })
+      .catch(() => setLoading(false));
 
     // Get role from session cookie
     const cookies = document.cookie.split(';');
@@ -68,12 +69,14 @@ export default function StudentsPage() {
                     setFacultyLabNumber(labName);
                     setTotalSystems(me?.facultyProfile?.totalSystems || 0);
                     setFacultyId(decoded.id);
-                  });
+                  })
+                  .catch(() => {});
             }
             if (decoded.role === 'SUPERADMIN') {
                 fetch('/api/password-reset')
                     .then(res => res.json())
-                    .then(data => setResetRequests(data || []));
+                    .then(data => setResetRequests(Array.isArray(data) ? data : []))
+                    .catch(() => {});
             }
         } catch {}
     }
@@ -280,45 +283,53 @@ export default function StudentsPage() {
 
   // Academic Year filter: extract from admissionDate year
   const availableYears = useMemo(() => {
-    return Array.from(new Set(students.map(s => {
+    return Array.from(new Set((students || []).map(s => {
       const profile = Array.isArray(s.studentProfile) ? s.studentProfile[0] : s.studentProfile;
       const yr = profile?.admissionDate ? new Date(profile.admissionDate).getFullYear() : null;
       return yr ? `${yr}-${yr + 1}` : null;
     }).filter(Boolean))) as string[];
   }, [students]);
 
-  let filteredStudents = [...students].filter(s => 
-      s.name?.toLowerCase().includes(searchTerm.toLowerCase()) || 
-      s.loginId?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      ((Array.isArray(s.studentProfile) ? s.studentProfile[0] : s.studentProfile)?.admissionNo || '').toLowerCase().includes(searchTerm.toLowerCase())
-  );
-
-  // Academic Year filter (admin only)
-  if (role === 'SUPERADMIN' && yearFilter !== 'ALL') {
-    filteredStudents = filteredStudents.filter(s => {
+  const filteredStudents = useMemo(() => {
+    const term = (searchTerm || '').toLowerCase();
+    let list = (students || []).filter(s => {
       const profile = Array.isArray(s.studentProfile) ? s.studentProfile[0] : s.studentProfile;
-      const yr = profile?.admissionDate ? new Date(profile.admissionDate).getFullYear() : null;
-      return yr ? `${yr}-${yr + 1}` === yearFilter : false;
+      return (
+        (s.name || '').toLowerCase().includes(term) ||
+        (s.loginId || '').toLowerCase().includes(term) ||
+        (profile?.admissionNo || '').toLowerCase().includes(term)
+      );
     });
-  }
 
-  // Faculty: filter to only their assigned lab's students
-  if (role === 'FACULTY' && facultyLabNumber) {
-    filteredStudents = filteredStudents.filter(s => {
-      const profile = Array.isArray(s.studentProfile) ? s.studentProfile[0] : s.studentProfile;
-      return profile?.labNumber === facultyLabNumber;
-    });
-  }
-
-  if (sortBy === 'lab') {
-      filteredStudents.sort((a, b) => {
-          const labA = (Array.isArray(a.studentProfile) ? a.studentProfile[0] : a.studentProfile)?.labNumber || '';
-          const labB = (Array.isArray(b.studentProfile) ? b.studentProfile[0] : b.studentProfile)?.labNumber || '';
-          return labA.localeCompare(labB);
+    // Academic Year filter (admin only)
+    if (role === 'SUPERADMIN' && yearFilter !== 'ALL') {
+      list = list.filter(s => {
+        const profile = Array.isArray(s.studentProfile) ? s.studentProfile[0] : s.studentProfile;
+        const yr = profile?.admissionDate ? new Date(profile.admissionDate).getFullYear() : null;
+        return yr ? `${yr}-${yr + 1}` === yearFilter : false;
       });
-  } else if (sortBy === 'name') {
-      filteredStudents.sort((a, b) => a.name.localeCompare(b.name));
-  }
+    }
+
+    // Faculty: filter to only their assigned lab's students
+    if (role === 'FACULTY' && facultyLabNumber) {
+      list = list.filter(s => {
+        const profile = Array.isArray(s.studentProfile) ? s.studentProfile[0] : s.studentProfile;
+        return profile?.labNumber === facultyLabNumber;
+      });
+    }
+
+    if (sortBy === 'lab') {
+      list = [...list].sort((a, b) => {
+        const labA = (Array.isArray(a.studentProfile) ? a.studentProfile[0] : a.studentProfile)?.labNumber || '';
+        const labB = (Array.isArray(b.studentProfile) ? b.studentProfile[0] : b.studentProfile)?.labNumber || '';
+        return labA.localeCompare(labB);
+      });
+    } else if (sortBy === 'name') {
+      list = [...list].sort((a, b) => (a.name || '').localeCompare(b.name || ''));
+    }
+
+    return list;
+  }, [students, searchTerm, role, yearFilter, facultyLabNumber, sortBy]);
 
   return (
     <div style={{ position: 'relative' }}>
