@@ -319,7 +319,12 @@ export default function AttendancePage() {
               </tr>
             </thead>
             <tbody>
-              {filteredStudents.map(student => (
+              {filteredStudents.map(student => {
+                  const profile = Array.isArray(student.studentProfile) ? student.studentProfile[0] : student.studentProfile;
+                  const courseStartDate = profile?.courseStartDate ? new Date(profile.courseStartDate) : null;
+                  if (courseStartDate) courseStartDate.setHours(0, 0, 0, 0);
+
+                  return (
                 <tr key={student.id} style={{ borderBottom: '1px solid var(--border)', transition: 'background 0.15s' }}>
                   <td style={{ padding: '1rem', position: 'sticky', left: 0, background: 'white', zIndex: 5, boxShadow: '2px 0 5px rgba(0,0,0,0.02)' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
@@ -350,10 +355,11 @@ export default function AttendancePage() {
                     const status = bulkData[student.id]?.[dateKey];
                     const isFuture = date > new Date();
                     const isSunday = date.getDay() === 0;
+                    const isBeforeStart = courseStartDate && date < courseStartDate;
                     
                     return (
                       <td key={dateKey} style={{ padding: '0.75rem', textAlign: 'center', borderLeft: '1px solid #f1f5f9', background: isSunday ? '#fef2f2' : 'transparent' }}>
-                        {!isFuture && !isSunday ? (
+                        {!isFuture && !isSunday && !isBeforeStart ? (
                           <AttendanceMarker 
                             status={status} 
                             loading={markingCell === `${student.id}-${dateKey}`}
@@ -362,13 +368,15 @@ export default function AttendancePage() {
                             activePopover={popover?.userId === student.id && popover?.dateKey === dateKey}
                           />
                         ) : (
-                          <div style={{ color: '#cbd5e1', fontSize: '0.8rem' }}>{isSunday ? 'OFF' : '-'}</div>
+                          <div style={{ color: '#cbd5e1', fontSize: '0.8rem' }} title={isBeforeStart ? "Before course start date" : ""}>
+                              {isBeforeStart ? '—' : isSunday ? 'OFF' : '-'}
+                          </div>
                         )}
                       </td>
                     );
                   })}
                 </tr>
-              ))}
+              )})}
             </tbody>
           </table>
         </div>

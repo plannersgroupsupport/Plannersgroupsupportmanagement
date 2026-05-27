@@ -11,6 +11,7 @@ export default function StudentsPage() {
   const [viewingStudent, setViewingStudent] = useState<any>(null);
   const [role, setRole] = useState<string | null>(null);
   const [facultyLabNumber, setFacultyLabNumber] = useState<string | null>(null);
+  const [totalSystems, setTotalSystems] = useState<number>(0);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [resetRequests, setResetRequests] = useState<any[]>([]);
   const [activeTab, setActiveTab] = useState('STUDENTS'); // STUDENTS or RESETS
@@ -63,6 +64,7 @@ export default function StudentsPage() {
                     const me = facultyList.find((f: any) => f.id === decoded.id);
                     const labName = me?.facultyProfile?.lab?.name || null;
                     setFacultyLabNumber(labName);
+                    setTotalSystems(me?.facultyProfile?.totalSystems || 0);
                   });
             }
             if (decoded.role === 'SUPERADMIN') {
@@ -214,6 +216,25 @@ export default function StudentsPage() {
     }
   };
 
+  const handleSystemAssign = async (studentId: string, systemNumber: string) => {
+    const res = await fetch('/api/users', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id: studentId, systemNumber })
+    });
+    if (res.ok) {
+       setStudents(prev => prev.map(s => {
+         if (s.id === studentId) {
+            const up = Array.isArray(s.studentProfile) ? { ...s.studentProfile[0], systemNumber } : { ...s.studentProfile, systemNumber };
+            return { ...s, studentProfile: Array.isArray(s.studentProfile) ? [up] : up };
+         }
+         return s;
+       }));
+    } else {
+       alert("Failed to assign system number");
+    }
+  };
+
   const handleStatusChange = async (studentId: string, newStatus: string) => {
     setStudents(prev => prev.map(s => {
       if (s.id === studentId) {
@@ -292,11 +313,45 @@ export default function StudentsPage() {
       `}</style>
       <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '2rem', flexWrap: 'wrap' }}>
         <h1 className="students-h1" style={{ fontSize: '2.5rem', fontWeight: '800', background: 'linear-gradient(135deg, var(--primary), #4c6ef5)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', margin: 0 }}>Student Management</h1>
-        {role === 'FACULTY' && facultyLabNumber && (
-          <span style={{ padding: '0.35rem 1rem', borderRadius: '20px', fontSize: '0.8rem', fontWeight: '700', background: '#eff6ff', color: '#1d4ed8', border: '1px solid #bfdbfe' }}>
-            🖥️ Viewing: {facultyLabNumber} Students Only
-          </span>
-        )}
+        {role === 'FACULTY' && facultyLabNumber && (() => {
+           const assignedCount = filteredStudents.filter(s => {
+               const p = Array.isArray(s.studentProfile) ? s.studentProfile[0] : s.studentProfile;
+               return p && p.systemNumber && p.systemNumber.trim() !== '';
+           }).length;
+           const remainCount = Math.max(0, totalSystems - assignedCount);
+
+           return (
+             <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
+               <span style={{ padding: '0.35rem 1rem', borderRadius: '20px', fontSize: '0.8rem', fontWeight: '700', background: '#eff6ff', color: '#1d4ed8', border: '1px solid #bfdbfe' }}>
+                 🖥️ {facultyLabNumber}
+               </span>
+               <div style={{ padding: '0.2rem 0.5rem', borderRadius: '8px', background: 'white', border: '1px solid var(--border)', fontSize: '0.8rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                 <strong>Total Systems:</strong> 
+                 <input 
+                   type="number" 
+                   value={totalSystems} 
+                   onChange={(e) => setTotalSystems(parseInt(e.target.value) || 0)}
+                   onBlur={async (e) => {
+                     const val = parseInt(e.target.value) || 0;
+                     const cookies = document.cookie.split(';');
+                     const authCookie = cookies.find(c => c.trim().startsWith('auth_token='));
+                     if (authCookie) {
+                         const decoded = JSON.parse(decodeURIComponent(authCookie.split('=')[1]));
+                         await fetch('/api/users', {
+                             method: 'PATCH',
+                             headers: { 'Content-Type': 'application/json' },
+                             body: JSON.stringify({ id: decoded.id, totalSystems: val })
+                         });
+                     }
+                   }}
+                   style={{ width: '50px', padding: '0.1rem', border: '1px solid var(--border)', borderRadius: '4px', textAlign: 'center' }} 
+                 />
+                 <span style={{ color: '#10b981', marginLeft: '0.5rem' }}>Assigned: {assignedCount}</span>
+                 <span style={{ color: '#f59e0b' }}>| Remaining: {remainCount}</span>
+               </div>
+             </div>
+           );
+        })()}
         {role === 'FACULTY' && !facultyLabNumber && (
           <span style={{ padding: '0.35rem 1rem', borderRadius: '20px', fontSize: '0.8rem', fontWeight: '700', background: '#fff7ed', color: '#c2410c', border: '1px solid #fed7aa' }}>
             ⚠️ No Lab Assigned — Showing All Students
@@ -436,6 +491,7 @@ export default function StudentsPage() {
                     <tr style={{ background: '#f8fafc', borderBottom: '1px solid var(--border)' }}>
                       <th style={{ padding: '1rem' }}>Student Info</th>
                       <th>Batch / Lab</th>
+                      {role === 'FACULTY' && <th>System No</th>}
                       <th>Class Status</th>
                       <th>Account</th>
                       <th>Package</th>
@@ -454,9 +510,20 @@ export default function StudentsPage() {
                             <div style={{ fontSize: '0.8rem', color: '#64748b' }}>{profile?.admissionNo || 'No ID'} • {s.loginId}</div>
                         </td>
                         <td>
-                            <div style={{ fontSize: '0.85rem' }}>{profile?.batch || 'N/A'}</div>
+                            <div style={{ fontSize: '0.85rem' }}>{profile?.batch === 'AFTERNOON' ? 'Mid Batch' : profile?.batch === 'EVENING' ? 'Afternoon Batch' : profile?.batch || 'N/A'}</div>
                             <div style={{ fontSize: '0.75rem', color: '#64748b' }}>{profile?.labNumber || 'N/A'}</div>
                         </td>
+                        {role === 'FACULTY' && (
+                          <td>
+                            <input 
+                              type="text"
+                              placeholder="e.g. PC-12"
+                              defaultValue={profile?.systemNumber || ''}
+                              onBlur={(e) => handleSystemAssign(s.id, e.target.value)}
+                              style={{ padding: '0.3rem', borderRadius: '4px', border: '1px solid var(--border)', fontSize: '0.75rem', width: '80px', background: 'white' }}
+                            />
+                          </td>
+                        )}
                         <td>
                             {role === 'FACULTY' || role === 'SUPERADMIN' ? (
                                 <select 
@@ -613,9 +680,9 @@ export default function StudentsPage() {
                 </div>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem', marginTop: '0.5rem' }}>
                     <select value={formData.batch} onChange={e => setFormData({...formData, batch: e.target.value})} style={{ padding: '0.75rem', borderRadius: '8px', border: '1px solid var(--border)' }}>
-                        <option value="MORNING">Morning</option>
-                        <option value="AFTERNOON">Afternoon</option>
-                        <option value="EVENING">Evening</option>
+                        <option value="MORNING">Morning Batch</option>
+                        <option value="AFTERNOON">Mid Batch</option>
+                        <option value="EVENING">Afternoon Batch</option>
                     </select>
                     <select value={formData.labNumber} onChange={e => setFormData({...formData, labNumber: e.target.value})} style={{ padding: '0.75rem', borderRadius: '8px', border: '1px solid var(--border)' }}>
                         <option value="LAB-1">Lab 1</option>
@@ -729,8 +796,9 @@ export default function StudentsPage() {
                           <SectionTitle title="Academic Profile" />
                           <div style={{ display: 'grid', gap: '0.75rem' }}>
                               <DetailRow label="Admission No" value={profile?.admissionNo} />
-                              <DetailRow label="Batch" value={profile?.batch} />
+                              <DetailRow label="Batch" value={profile?.batch === 'AFTERNOON' ? 'Mid Batch' : profile?.batch === 'EVENING' ? 'Afternoon Batch' : profile?.batch} />
                               <DetailRow label="Lab Number" value={profile?.labNumber} />
+                              {profile?.systemNumber && <DetailRow label="System No" value={profile.systemNumber} />}
                               <DetailRow label="College" value={profile?.collegeName} />
                               <DetailRow label="Courses" value={profile?.courseName} />
                           </div>

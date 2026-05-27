@@ -17,6 +17,7 @@ export async function POST(req: Request) {
         amount: Number(data.amount) || 10000,
         month: data.month,
         status: data.status || 'PAID',
+        paidDate: data.paidDate ? new Date(data.paidDate) : new Date(),
       }
     });
 
@@ -52,6 +53,27 @@ export async function DELETE(req: Request) {
     });
 
     return NextResponse.json({ success: true, message: 'Payment record removed successfully' });
+  } catch (err: any) {
+    return NextResponse.json({ error: err.message }, { status: 400 });
+  }
+}
+
+export async function PATCH(req: Request) {
+  try {
+    const data = await req.json();
+    if (!data.id) return NextResponse.json({ error: 'ID required' }, { status: 400 });
+
+    const updateData: any = {};
+    if (data.amount !== undefined) updateData.amount = Number(data.amount);
+    if (data.month !== undefined) updateData.month = data.month;
+    if (data.status !== undefined) updateData.status = data.status;
+    if (data.paidDate !== undefined) updateData.paidDate = data.paidDate ? new Date(data.paidDate) : null;
+
+    const feeRecord = await prisma.feePayment.update({
+      where: { id: data.id },
+      data: updateData
+    });
+    return NextResponse.json({ success: true, record: feeRecord });
   } catch (err: any) {
     return NextResponse.json({ error: err.message }, { status: 400 });
   }

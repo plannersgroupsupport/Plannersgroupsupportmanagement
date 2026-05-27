@@ -30,7 +30,7 @@ const generateMonthOptions = (student: any) => {
 export default function AccountantFeesPage() {
     const [students, setStudents] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
-    const [paymentData, setPaymentData] = useState<Record<string, { amount: string, month: string }>>({});
+    const [paymentData, setPaymentData] = useState<Record<string, { amount: string, month: string, paidDate: string }>>({});
     const [searchTerm, setSearchTerm] = useState('');
 
     const fetchStudents = () => {
@@ -39,10 +39,10 @@ export default function AccountantFeesPage() {
           .then(data => { 
               if (Array.isArray(data)) {
                   setStudents(data); 
-                  const initData: Record<string, { amount: string, month: string }> = {};
+                  const initData: Record<string, { amount: string, month: string, paidDate: string }> = {};
                   data.forEach((s: any) => {
                       const opts = generateMonthOptions(s);
-                      initData[s.id] = { amount: '', month: opts[0] };
+                      initData[s.id] = { amount: '', month: opts[0], paidDate: new Date().toISOString().split('T')[0] };
                   });
                   setPaymentData(initData);
               } else {
@@ -76,7 +76,8 @@ export default function AccountantFeesPage() {
                studentId: student.id,
                month: data.month,
                amount: Number(data.amount),
-               status: 'PAID'
+               status: 'PAID',
+               paidDate: data.paidDate
            })
         });
 
@@ -101,6 +102,19 @@ export default function AccountantFeesPage() {
             fetchStudents();
         } else {
             alert('Failed to remove payment record.');
+        }
+    };
+
+    const updatePaidDate = async (paymentId: string, newDate: string) => {
+        const res = await fetch('/api/fees', {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ id: paymentId, paidDate: newDate })
+        });
+        if (res.ok) {
+            fetchStudents();
+        } else {
+            alert('Failed to update receipt date.');
         }
     };
 
@@ -168,6 +182,7 @@ export default function AccountantFeesPage() {
                     <th>Balance Owed</th>
                     <th>Select Admission Month Cycle</th>
                     <th>Amount Paid (₹)</th>
+                    <th>Receipt Date</th>
                     <th>Actions</th>
                   </tr>
                 </thead>
@@ -210,14 +225,14 @@ export default function AccountantFeesPage() {
                                       <div key={p.id} style={{ borderBottom: '1px solid #f1f5f9', padding: '4px 0', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                                           <span>
                                               {p.month}: ₹{p.amount} 
-                                              <span style={{ fontSize: '0.65rem', color: '#94a3b8', display: 'block' }}>
-                                                  Logged: {(() => {
-                                                      const d = new Date(p.createdAt || p.updatedAt);
-                                                      const day = String(d.getDate()).padStart(2, '0');
-                                                      const month = String(d.getMonth() + 1).padStart(2, '0');
-                                                      const year = d.getFullYear();
-                                                      return `${day}/${month}/${year}`;
-                                                  })()}
+                                              <span style={{ fontSize: '0.65rem', color: '#94a3b8', display: 'flex', alignItems: 'center', gap: '0.3rem', marginTop: '0.2rem' }}>
+                                                  Paid: 
+                                                  <input 
+                                                    type="date"
+                                                    defaultValue={p.paidDate ? p.paidDate.split('T')[0] : (p.createdAt ? p.createdAt.split('T')[0] : '')}
+                                                    onBlur={(e) => updatePaidDate(p.id, e.target.value)}
+                                                    style={{ padding: '0.1rem', border: '1px solid var(--border)', borderRadius: '4px', fontSize: '0.65rem', color: '#64748b' }}
+                                                  />
                                               </span>
                                           </span>
                                           <button 
@@ -263,6 +278,14 @@ export default function AccountantFeesPage() {
                              value={paymentData[s.id]?.amount || ''}
                              onChange={e => handleInput(s.id, 'amount', e.target.value)}
                              style={{ padding: '0.5rem', width: '100px', borderRadius: '4px', border: '1px solid var(--border)', fontWeight: 'bold' }}
+                          />
+                      </td>
+                      <td>
+                          <input 
+                             type="date" 
+                             value={paymentData[s.id]?.paidDate || ''}
+                             onChange={e => handleInput(s.id, 'paidDate', e.target.value)}
+                             style={{ padding: '0.5rem', width: '130px', borderRadius: '4px', border: '1px solid var(--border)' }}
                           />
                       </td>
                       <td>

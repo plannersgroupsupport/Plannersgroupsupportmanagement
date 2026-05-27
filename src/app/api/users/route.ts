@@ -174,6 +174,7 @@ export async function PATCH(req: Request) {
 
       safeAssign('placedAt', updateData.placedAt);
       safeAssign('currentStatus', updateData.currentStatus);
+      safeAssign('systemNumber', updateData.systemNumber);
 
       if (Object.keys(studentUpdateData).length > 0) {
         try {
@@ -188,22 +189,33 @@ export async function PATCH(req: Request) {
       }
     }
 
-    // Handle faculty lab update
-    if (updatedUser && updatedUser.role === 'FACULTY' && updateData.labNumber !== undefined) {
-      let labId: string | null = null;
-      if (updateData.labNumber && updateData.labNumber !== 'NONE') {
-        let lab = await prisma.lab.findFirst({ where: { name: updateData.labNumber } });
-        if (!lab) {
-          lab = await prisma.lab.create({ data: { name: updateData.labNumber } });
+    // Handle faculty updates
+    if (updatedUser && updatedUser.role === 'FACULTY') {
+      let updateObj: any = {};
+      
+      if (updateData.labNumber !== undefined) {
+        let labId: string | null = null;
+        if (updateData.labNumber && updateData.labNumber !== 'NONE') {
+          let lab = await prisma.lab.findFirst({ where: { name: updateData.labNumber } });
+          if (!lab) {
+            lab = await prisma.lab.create({ data: { name: updateData.labNumber } });
+          }
+          labId = lab.id;
         }
-        labId = lab.id;
+        updateObj.labId = labId;
       }
-      // Upsert the faculty profile
-      const existingProfile = await prisma.facultyProfile.findUnique({ where: { userId: id } });
-      if (existingProfile) {
-        await prisma.facultyProfile.update({ where: { userId: id }, data: { labId } });
-      } else {
-        await prisma.facultyProfile.create({ data: { userId: id, labId } });
+      
+      if (updateData.totalSystems !== undefined) {
+        updateObj.totalSystems = parseInt(updateData.totalSystems, 10);
+      }
+
+      if (Object.keys(updateObj).length > 0) {
+        const existingProfile = await prisma.facultyProfile.findUnique({ where: { userId: id } });
+        if (existingProfile) {
+          await prisma.facultyProfile.update({ where: { userId: id }, data: updateObj });
+        } else {
+          await prisma.facultyProfile.create({ data: { userId: id, ...updateObj } });
+        }
       }
     }
 

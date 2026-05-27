@@ -149,10 +149,14 @@ export default function RegisterPage() {
                       <div style={{ display: 'grid', gap: '1.25rem' }}>
                           <FloatInput label="College Name" required value={formData.collegeName} onChange={e => setFormData({...formData, collegeName: e.target.value})} />
                           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                              <DateInput label="Admission Date" required value={formData.admissionDate} onChange={e => setFormData({...formData, admissionDate: e.target.value})} />
+                              <DateInput label="Course Start Date" required value={formData.courseStartDate} onChange={e => setFormData({...formData, courseStartDate: e.target.value})} />
+                          </div>
+                          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
                               <select value={formData.batch} onChange={e => setFormData({...formData, batch: e.target.value})} style={{ width: '100%', padding: '0.85rem', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
                                   <option value="MORNING">Morning Batch</option>
-                                  <option value="AFTERNOON">Afternoon Batch</option>
-                                  <option value="EVENING">Evening Batch</option>
+                                  <option value="AFTERNOON">Mid Batch</option>
+                                  <option value="EVENING">Afternoon Batch</option>
                               </select>
                               <select value={formData.labNumber} onChange={e => setFormData({...formData, labNumber: e.target.value})} style={{ width: '100%', padding: '0.85rem', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
                                   <option value="LAB-1">Lab 1</option>

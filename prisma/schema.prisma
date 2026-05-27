@@ -52,6 +52,7 @@ model StudentProfile {
   placedAt        String?   // Company Name / Location
   labId           String?   // Keep for legacy compatibility if needed
   lab             Lab?      @relation(fields: [labId], references: [id])
+  systemNumber    String?   // New field for faculty system assignment
   
   attendances     Attendance[]
   certificateRecords CertificateRecord[]
@@ -63,6 +64,7 @@ model FacultyProfile {
   user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   labId           String?
   lab             Lab?      @relation("FacultyLab", fields: [labId], references: [id])
+  totalSystems    Int?      // Total number of systems in the lab
 }
 
 model Lab {
@@ -89,6 +91,7 @@ model FeePayment {
   amount       Float
   month        String   // e.g., "2023-10"
   status       String   // PAID, PENDING
+  paidDate     DateTime? // Exact date payment was made
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 }
