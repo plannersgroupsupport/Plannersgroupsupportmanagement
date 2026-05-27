@@ -452,7 +452,7 @@ export default function StudentsPage() {
               style={{ padding: '0.75rem 1rem', borderRadius: '12px', border: '1px solid var(--border)', background: 'white', fontWeight: 'bold', cursor: 'pointer' }}
             >
               <option value="ALL">📅 All Years</option>
-              {availableYears.sort().map(y => (
+              {([...availableYears]).sort().map(y => (
                 <option key={y} value={y}>{y} Batch</option>
               ))}
             </select>
