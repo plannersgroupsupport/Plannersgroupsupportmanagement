@@ -46,7 +46,10 @@ export default function StudentsPage() {
     courses: [] as string[]
   });
 
+  const [mounted, setMounted] = useState(false);
+
   useEffect(() => {
+    setMounted(true);
     fetch('/api/users?role=STUDENT')
       .then(res => res.json())
       .then(data => { setStudents(Array.isArray(data) ? data : []); setLoading(false); })
@@ -330,6 +333,14 @@ export default function StudentsPage() {
 
     return list;
   }, [students, searchTerm, role, yearFilter, facultyLabNumber, sortBy]);
+
+  if (!mounted) {
+    return (
+      <div style={{ textAlign: 'center', padding: '5rem', color: '#64748b' }}>
+         <p>Securely fetching student data...</p>
+      </div>
+    );
+  }
 
   return (
     <div style={{ position: 'relative' }}>
