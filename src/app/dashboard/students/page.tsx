@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 'use client';
 
-import { useEffect, useState, useMemo } from 'react';
+import { useEffect, useState } from 'react';
 
 export default function StudentsPage() {
   const [students, setStudents] = useState<any[]>([]);
@@ -15,8 +15,6 @@ export default function StudentsPage() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [resetRequests, setResetRequests] = useState<any[]>([]);
   const [activeTab, setActiveTab] = useState('STUDENTS'); // STUDENTS or RESETS
-  const [yearFilter, setYearFilter] = useState('ALL'); // Academic year filter for admin
-  const [facultyId, setFacultyId] = useState<string | null>(null);
   
   const [formData, setFormData] = useState({
     name: '',
@@ -28,13 +26,13 @@ export default function StudentsPage() {
     role: 'STUDENT',
     packageType: 'BASIC',
     currentStatus: 'Autocad',
-    admissionDate: '',
+    admissionDate: new Date().toISOString().split('T')[0],
     dob: '',
     sex: 'MALE',
     batch: 'MORNING',
     labNumber: 'LAB-1',
     collegeName: '',
-    courseStartDate: '',
+    courseStartDate: new Date().toISOString().split('T')[0],
     fatherName: '',
     fatherPhone: '',
     address: '',
@@ -46,14 +44,10 @@ export default function StudentsPage() {
     courses: [] as string[]
   });
 
-  const [mounted, setMounted] = useState(false);
-
   useEffect(() => {
-    setMounted(true);
     fetch('/api/users?role=STUDENT')
       .then(res => res.json())
-      .then(data => { setStudents(Array.isArray(data) ? data : []); setLoading(false); })
-      .catch(() => setLoading(false));
+      .then(data => { setStudents(data); setLoading(false); });
 
     // Get role from session cookie
     const cookies = document.cookie.split(';');
@@ -71,15 +65,12 @@ export default function StudentsPage() {
                     const labName = me?.facultyProfile?.lab?.name || null;
                     setFacultyLabNumber(labName);
                     setTotalSystems(me?.facultyProfile?.totalSystems || 0);
-                    setFacultyId(decoded.id);
-                  })
-                  .catch(() => {});
+                  });
             }
             if (decoded.role === 'SUPERADMIN') {
                 fetch('/api/password-reset')
                     .then(res => res.json())
-                    .then(data => setResetRequests(Array.isArray(data) ? data : []))
-                    .catch(() => {});
+                    .then(data => setResetRequests(data || []));
             }
         } catch {}
     }
@@ -284,62 +275,28 @@ export default function StudentsPage() {
     }
   };
 
-  // Academic Year filter: extract from admissionDate year
-  const availableYears = useMemo(() => {
-    return Array.from(new Set((students || []).map(s => {
-      const profile = Array.isArray(s.studentProfile) ? s.studentProfile[0] : s.studentProfile;
-      const yr = profile?.admissionDate ? new Date(profile.admissionDate).getFullYear() : null;
-      return yr ? `${yr}-${yr + 1}` : null;
-    }).filter(Boolean))) as string[];
-  }, [students]);
+  let filteredStudents = [...students].filter(s => 
+      s.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
+      s.loginId.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (Array.isArray(s.studentProfile) ? s.studentProfile[0] : s.studentProfile)?.admissionNo?.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
-  const filteredStudents = useMemo(() => {
-    const term = (searchTerm || '').toLowerCase();
-    let list = (students || []).filter(s => {
+  // Faculty: filter to only their assigned lab's students
+  if (role === 'FACULTY' && facultyLabNumber) {
+    filteredStudents = filteredStudents.filter(s => {
       const profile = Array.isArray(s.studentProfile) ? s.studentProfile[0] : s.studentProfile;
-      return (
-        (s.name || '').toLowerCase().includes(term) ||
-        (s.loginId || '').toLowerCase().includes(term) ||
-        (profile?.admissionNo || '').toLowerCase().includes(term)
-      );
+      return profile?.labNumber === facultyLabNumber;
     });
+  }
 
-    // Academic Year filter (admin only)
-    if (role === 'SUPERADMIN' && yearFilter !== 'ALL') {
-      list = list.filter(s => {
-        const profile = Array.isArray(s.studentProfile) ? s.studentProfile[0] : s.studentProfile;
-        const yr = profile?.admissionDate ? new Date(profile.admissionDate).getFullYear() : null;
-        return yr ? `${yr}-${yr + 1}` === yearFilter : false;
+  if (sortBy === 'lab') {
+      filteredStudents.sort((a, b) => {
+          const labA = (Array.isArray(a.studentProfile) ? a.studentProfile[0] : a.studentProfile)?.labNumber || '';
+          const labB = (Array.isArray(b.studentProfile) ? b.studentProfile[0] : b.studentProfile)?.labNumber || '';
+          return labA.localeCompare(labB);
       });
-    }
-
-    // Faculty: filter to only their assigned lab's students
-    if (role === 'FACULTY' && facultyLabNumber) {
-      list = list.filter(s => {
-        const profile = Array.isArray(s.studentProfile) ? s.studentProfile[0] : s.studentProfile;
-        return profile?.labNumber === facultyLabNumber;
-      });
-    }
-
-    if (sortBy === 'lab') {
-      list = [...list].sort((a, b) => {
-        const labA = (Array.isArray(a.studentProfile) ? a.studentProfile[0] : a.studentProfile)?.labNumber || '';
-        const labB = (Array.isArray(b.studentProfile) ? b.studentProfile[0] : b.studentProfile)?.labNumber || '';
-        return labA.localeCompare(labB);
-      });
-    } else if (sortBy === 'name') {
-      list = [...list].sort((a, b) => (a.name || '').localeCompare(b.name || ''));
-    }
-
-    return list;
-  }, [students, searchTerm, role, yearFilter, facultyLabNumber, sortBy]);
-
-  if (!mounted) {
-    return (
-      <div style={{ textAlign: 'center', padding: '5rem', color: '#64748b' }}>
-         <p>Securely fetching student data...</p>
-      </div>
-    );
+  } else if (sortBy === 'name') {
+      filteredStudents.sort((a, b) => a.name.localeCompare(b.name));
   }
 
   return (
@@ -364,7 +321,7 @@ export default function StudentsPage() {
            const remainCount = Math.max(0, totalSystems - assignedCount);
 
            return (
-             <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center', flexWrap: 'wrap' }}>
+             <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
                <span style={{ padding: '0.35rem 1rem', borderRadius: '20px', fontSize: '0.8rem', fontWeight: '700', background: '#eff6ff', color: '#1d4ed8', border: '1px solid #bfdbfe' }}>
                  🖥️ {facultyLabNumber}
                </span>
@@ -392,21 +349,6 @@ export default function StudentsPage() {
                  <span style={{ color: '#10b981', marginLeft: '0.5rem' }}>Assigned: {assignedCount}</span>
                  <span style={{ color: '#f59e0b' }}>| Remaining: {remainCount}</span>
                </div>
-               <button
-                 onClick={() => {
-                   const numbers = filteredStudents
-                     .map(s => s.phone)
-                     .filter(Boolean)
-                     .join(', ');
-                   if (!numbers) { alert('No phone numbers found for students in this lab.'); return; }
-                   navigator.clipboard.writeText(numbers);
-                   alert('✅ ' + filteredStudents.filter(s => s.phone).length + ' phone numbers copied!\n\nPaste them in WhatsApp when creating a group.');
-                 }}
-                 style={{ padding: '0.35rem 0.9rem', borderRadius: '20px', fontSize: '0.8rem', fontWeight: '700', background: '#dcfce7', color: '#166534', border: '1px solid #86efac', cursor: 'pointer' }}
-                 title="Copy all lab student phone numbers for WhatsApp group"
-               >
-                 💬 Copy Numbers for WhatsApp
-               </button>
              </div>
            );
         })()}
@@ -455,18 +397,6 @@ export default function StudentsPage() {
                     )}
                   </button>
               </div>
-          )}
-          {role === 'SUPERADMIN' && availableYears.length > 0 && (
-            <select
-              value={yearFilter}
-              onChange={e => setYearFilter(e.target.value)}
-              style={{ padding: '0.75rem 1rem', borderRadius: '12px', border: '1px solid var(--border)', background: 'white', fontWeight: 'bold', cursor: 'pointer' }}
-            >
-              <option value="ALL">📅 All Years</option>
-              {([...availableYears]).sort().map(y => (
-                <option key={y} value={y}>{y} Batch</option>
-              ))}
-            </select>
           )}
       </div>
 
@@ -848,20 +778,9 @@ export default function StudentsPage() {
                   </button>
                   
                   <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
-                      {/* Student photo for faculty/admin */}
-                      {(() => {
-                        const photos = (viewingStudent.fileUploads || []).filter((f: any) => f.type === 'PHOTO');
-                        const photo = photos.sort((a: any, b: any) => new Date(b.uploadedAt || 0).getTime() - new Date(a.uploadedAt || 0).getTime())[0];
-                        return photo ? (
-                          <div style={{ width: '90px', height: '90px', borderRadius: '50%', margin: '0 auto 1rem', overflow: 'hidden', border: '3px solid var(--primary)', boxShadow: '0 4px 12px rgba(0,0,0,0.15)' }}>
-                            <img src={photo.url} alt={viewingStudent.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                          </div>
-                        ) : (
-                          <div style={{ width: '80px', height: '80px', background: 'var(--primary)', borderRadius: '50%', margin: '0 auto 1rem', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontSize: '1.5rem', fontWeight: 'bold' }}>
-                              {viewingStudent.name[0]}
-                          </div>
-                        );
-                      })()}
+                      <div style={{ width: '80px', height: '80px', background: 'var(--primary)', borderRadius: '50%', margin: '0 auto 1rem', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontSize: '1.5rem', fontWeight: 'bold' }}>
+                          {viewingStudent.name[0]}
+                      </div>
                       <h2 style={{ margin: 0 }}>{viewingStudent.name}</h2>
                       <p style={{ color: '#64748b', margin: '0.5rem 0' }}>{viewingStudent.loginId} • {profile?.admissionNo}</p>
                       
