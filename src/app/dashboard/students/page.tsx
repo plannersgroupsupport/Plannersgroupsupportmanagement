@@ -50,7 +50,8 @@ export default function StudentsPage() {
     setMounted(true);
     fetch('/api/users?role=STUDENT')
       .then(res => res.json())
-      .then(data => { setStudents(data); setLoading(false); });
+      .then(data => { setStudents(Array.isArray(data) ? data : []); setLoading(false); })
+      .catch(() => { setStudents([]); setLoading(false); });
 
     // Get role from session cookie
     const cookies = document.cookie.split(';');

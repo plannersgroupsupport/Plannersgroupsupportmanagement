@@ -55,8 +55,18 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     fetchSettings();
   }, [router]);
 
-  // --- 15-minute auto-logout for non-SUPERADMIN ---
+  // --- 15-minute auto-logout and Cache Busting ---
   useEffect(() => {
+    // Force aggressive unregistration of any rogue Service Worker caching old Error code
+    if (typeof window !== 'undefined' && 'serviceWorker' in navigator) {
+      navigator.serviceWorker.getRegistrations().then((registrations) => {
+        registrations.forEach(registration => registration.unregister());
+      });
+      caches.keys().then((keys) => {
+        keys.forEach(key => caches.delete(key));
+      });
+    }
+
     if (!role || role === 'SUPERADMIN') return;
 
     const TIMEOUT = 15 * 60 * 1000; // 15 minutes
