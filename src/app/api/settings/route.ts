@@ -9,7 +9,7 @@ export async function GET() {
 
     if (!settings) {
       settings = await prisma.systemSettings.create({
-        data: { id: 'singleton', companyName: 'Planners Group' }
+        data: { id: 'singleton', companyName: 'Planners Group Ernakulam' }
       });
     }
 
@@ -23,12 +23,12 @@ export async function POST(req: Request) {
   try {
     const body = await req.json();
     console.log('Incoming Settings Update:', body);
-    const { companyName, logoUrl } = body;
+    const { companyName, logoUrl, globalNotification } = body;
 
     const settings = await prisma.systemSettings.upsert({
       where: { id: 'singleton' },
-      update: { companyName, logoUrl },
-      create: { id: 'singleton', companyName: companyName || 'Planners Group', logoUrl }
+      update: { companyName, logoUrl, globalNotification },
+      create: { id: 'singleton', companyName: companyName || 'Planners Group Ernakulam', logoUrl, globalNotification }
     });
 
     return NextResponse.json({ success: true, settings });

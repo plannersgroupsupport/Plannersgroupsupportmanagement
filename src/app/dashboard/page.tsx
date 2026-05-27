@@ -44,7 +44,14 @@ export default async function DashboardPage() {
 
       const instructors = await prisma.user.findMany({
           where: { role: 'FACULTY' },
-          select: { id: true, name: true, facultyProfile: { include: { lab: true } } }
+          select: { id: true, name: true, facultyProfile: { include: { lab: true } }, fileUploads: { where: { type: 'PHOTO' }, take: 1, orderBy: { uploadedAt: 'desc' } } }
+      });
+
+      // Filter: show only faculty assigned to student's lab, plus unassigned faculty
+      const studentLabNumber = profile?.labNumber || null;
+      const filteredInstructors = instructors.filter((inst: any) => {
+        const assignedLab = inst.facultyProfile?.lab?.name;
+        return !assignedLab || assignedLab === studentLabNumber;
       });
 
       const notesCourses = profile?.courseName ? profile.courseName.split(',').map((s: string)=>s.trim()).filter(Boolean) : [];
@@ -184,20 +191,46 @@ export default async function DashboardPage() {
                       </div>
                   </div>
 
-                  {/* Course Instructors */}
+                   {/* Course Instructors */}
                   <div>
-                      <h3 style={{ fontSize: '1.15rem', fontWeight: 'bold', marginBottom: '0.75rem', color: 'var(--foreground)' }}>Course instructors</h3>
+                      <h3 style={{ fontSize: '1.15rem', fontWeight: 'bold', marginBottom: '0.75rem', color: 'var(--foreground)' }}>Course Instructors</h3>
                       <div style={{ display: 'flex', gap: '1.25rem', flexWrap: 'wrap' }}>
-                          {instructors.length > 0 ? instructors.map((inst: any) => (
+                          {filteredInstructors.length > 0 ? filteredInstructors.map((inst: any) => {
+                            const photoUrl = inst.fileUploads?.[0]?.url || null;
+                            return (
                               <div key={inst.id} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.5rem' }}>
-                                  <div style={{ width: '64px', height: '64px', borderRadius: '50%', background: 'linear-gradient(135deg, var(--primary), #4c6ef5)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontWeight: 'bold', fontSize: '1.4rem', border: '3px solid white', boxShadow: '0 4px 10px rgba(0,0,0,0.15)' }}>
-                                      {inst.name.charAt(0)}
-                                  </div>
-                                  <div style={{ textAlign: 'center' }}>
-                                    <div style={{ fontSize: '0.85rem', fontWeight: '700', maxWidth: '75px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{inst.name.split(' ')[0]}</div>
-                                  </div>
+                                <div style={{
+                                  width: '64px', height: '64px', borderRadius: '50%',
+                                  background: 'linear-gradient(135deg, var(--primary), #4c6ef5)',
+                                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                  color: 'white', fontWeight: 'bold', fontSize: '1.4rem',
+                                  border: '3px solid white', boxShadow: '0 4px 10px rgba(0,0,0,0.15)',
+                                  overflow: 'hidden', flexShrink: 0
+                                }}>
+                                  {photoUrl ? (
+                                    <img
+                                      src={photoUrl}
+                                      alt={inst.name}
+                                      style={{
+                                        width: '100%', height: '100%', objectFit: 'cover',
+                                        pointerEvents: 'none',
+                                        WebkitUserDrag: 'none' as any,
+                                        userSelect: 'none'
+                                      }}
+                                      onContextMenu={(e) => e.preventDefault()}
+                                      draggable={false}
+                                    />
+                                  ) : inst.name.charAt(0)}
+                                </div>
+                                <div style={{ textAlign: 'center' }}>
+                                  <div style={{ fontSize: '0.85rem', fontWeight: '700', maxWidth: '75px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{inst.name.split(' ')[0]}</div>
+                                  {inst.facultyProfile?.lab?.name && (
+                                    <div style={{ fontSize: '0.7rem', color: '#64748b' }}>{inst.facultyProfile.lab.name}</div>
+                                  )}
+                                </div>
                               </div>
-                          )) : (
+                            );
+                          }) : (
                               <div style={{ fontSize: '0.85rem', color: '#64748b' }}>No instructors assigned right now.</div>
                           )}
                       </div>

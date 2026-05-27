@@ -111,9 +111,10 @@ model Holiday {
 }
 
 model SystemSettings {
-  id          String  @id @default("singleton")
-  companyName String  @default("Planners Group")
-  logoUrl     String?
+  id                 String  @id @default("singleton")
+  companyName        String  @default("Planners Group Ernakulam")
+  logoUrl            String?
+  globalNotification String? // Message to broadcast to all users
 }
 model PasswordResetRequest {
   id          String   @id @default(uuid())

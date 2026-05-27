@@ -14,9 +14,10 @@ export default function ProfilePage() {
     const [sslcFile, setSslcFile] = useState<File | null>(null);
 
     // Branding state
-    const [companyName, setCompanyName] = useState('Planners Group');
+    const [companyName, setCompanyName] = useState('Planners Group Ernakulam');
     const [logoUrl, setLogoUrl] = useState('');
     const [brandingFile, setBrandingFile] = useState<File | null>(null);
+    const [globalNotification, setGlobalNotification] = useState('');
 
     const fetchProfile = async () => {
         const cookies = document.cookie.split(';');
@@ -39,6 +40,7 @@ export default function ProfilePage() {
             const data = await res.json();
             if (data.companyName) setCompanyName(data.companyName);
             if (data.logoUrl) setLogoUrl(data.logoUrl);
+            if (data.globalNotification !== undefined) setGlobalNotification(data.globalNotification || '');
         } catch (e) { console.error('Settings fetch error', e); }
     };
 
@@ -120,7 +122,7 @@ export default function ProfilePage() {
         const res = await fetch('/api/settings', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ companyName, logoUrl: finalLogoUrl })
+            body: JSON.stringify({ companyName, logoUrl: finalLogoUrl, globalNotification: globalNotification.trim() || null })
         });
 
         if (res.ok) {
@@ -295,7 +297,14 @@ export default function ProfilePage() {
                                     onChange={e => setBrandingFile(e.target.files?.[0] || null)}
                                     style={{ fontSize: '0.8rem', marginBottom: '1rem', width: '100%' }} 
                                 />
-                                <button type="submit" disabled={updating} style={{ background: 'var(--success)', width: '100%' }}>Save Branding Global Settings</button>
+                                <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem', fontWeight: 'bold' }}>📢 Global Announcement Banner</label>
+                                <textarea
+                                    value={globalNotification}
+                                    onChange={e => setGlobalNotification(e.target.value)}
+                                    placeholder="Type a message to broadcast to ALL members (leave empty to clear)..."
+                                    style={{ width: '100%', padding: '0.75rem', borderRadius: '6px', border: '1px solid var(--border)', marginBottom: '1rem', height: '80px', resize: 'vertical', fontSize: '0.9rem' }}
+                                />
+                                <button type="submit" disabled={updating} style={{ background: 'var(--success)', width: '100%' }}>Save Branding &amp; Announcement</button>
                             </form>
                         </div>
                     </div>

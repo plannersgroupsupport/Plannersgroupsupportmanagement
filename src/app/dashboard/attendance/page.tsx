@@ -169,15 +169,14 @@ export default function AttendancePage() {
   };
 
   const handleBulkMark = async (status: string) => {
-    if (!confirm(`Mark everyone ${status.toLowerCase()} for the current visible week?`)) return;
+    const targetStudents = facultyLabNumber ? filteredStudents : students;
+    if (!confirm(`Mark ${status.toLowerCase()} for today${facultyLabNumber ? ` (${facultyLabNumber} - ${targetStudents.length} students)` : ` (ALL ${targetStudents.length} students)`}?`)) return;
     
     setCalendarLoading(true);
-    // In a real production app, we'd have a bulk API. For now, we'll sequentially update or 
-    // better, just mark today for everyone. Let's do bulk for today.
     const todayStr = formatDate(new Date());
     
     try {
-      await Promise.all(students.map(s => 
+      await Promise.all(targetStudents.map(s => 
         fetch('/api/attendance', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },

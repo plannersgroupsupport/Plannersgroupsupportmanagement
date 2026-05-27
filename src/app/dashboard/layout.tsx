@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
@@ -10,6 +10,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const [settings, setSettings] = useState<any>(null);
   const [profileData, setProfileData] = useState<any>(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [screenshotBlocked, setScreenshotBlocked] = useState(false);
+  const inactivityTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const router = useRouter();
   const pathname = usePathname();
 
@@ -52,6 +54,63 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     fetchSession();
     fetchSettings();
   }, [router]);
+
+  // --- 15-minute auto-logout for non-SUPERADMIN ---
+  useEffect(() => {
+    if (!role || role === 'SUPERADMIN') return;
+
+    const TIMEOUT = 15 * 60 * 1000; // 15 minutes
+
+    const resetTimer = () => {
+      if (inactivityTimer.current) clearTimeout(inactivityTimer.current);
+      inactivityTimer.current = setTimeout(async () => {
+        await fetch('/api/logout', { method: 'POST' });
+        document.cookie = 'auth_token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
+        router.push('/?timeout=1');
+      }, TIMEOUT);
+    };
+
+    const events = ['mousemove', 'mousedown', 'keydown', 'touchstart', 'scroll'];
+    events.forEach(ev => window.addEventListener(ev, resetTimer, { passive: true }));
+    resetTimer();
+
+    return () => {
+      if (inactivityTimer.current) clearTimeout(inactivityTimer.current);
+      events.forEach(ev => window.removeEventListener(ev, resetTimer));
+    };
+  }, [role, router]);
+
+  // --- Anti-screenshot overlay for STUDENT role ---
+  useEffect(() => {
+    if (role !== 'STUDENT') return;
+
+    const handleKey = (e: KeyboardEvent) => {
+      // PrintScreen, or common screenshot shortcuts
+      if (
+        e.key === 'PrintScreen' ||
+        (e.metaKey && e.shiftKey && (e.key === '3' || e.key === '4' || e.key === 's')) ||
+        (e.ctrlKey && e.key === 'p')
+      ) {
+        e.preventDefault();
+        setScreenshotBlocked(true);
+        setTimeout(() => setScreenshotBlocked(false), 2000);
+      }
+    };
+
+    const handleVisibility = () => {
+      if (document.hidden) {
+        setScreenshotBlocked(true);
+        setTimeout(() => setScreenshotBlocked(false), 1500);
+      }
+    };
+
+    document.addEventListener('keydown', handleKey);
+    document.addEventListener('visibilitychange', handleVisibility);
+    return () => {
+      document.removeEventListener('keydown', handleKey);
+      document.removeEventListener('visibilitychange', handleVisibility);
+    };
+  }, [role]);
 
   // Close sidebar when route changes (mobile nav link tap)
   useEffect(() => {
@@ -187,7 +246,19 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   );
 
   return (
-    <div style={{ display: 'flex', minHeight: '100vh', background: 'var(--background)', color: 'var(--foreground)', position: 'relative' }}>
+    <div style={{ display: 'flex', minHeight: '100vh', background: 'var(--background)', color: 'var(--foreground)', position: 'relative' }}
+      onContextMenu={role === 'STUDENT' ? (e) => e.preventDefault() : undefined}
+    >
+      {/* Screenshot blackout overlay */}
+      {screenshotBlocked && (
+        <div style={{
+          position: 'fixed', inset: 0, background: 'black', zIndex: 99999,
+          display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: '1rem'
+        }}>
+          <span style={{ color: 'white', fontSize: '3rem' }}>🔒</span>
+          <span style={{ color: 'white', fontSize: '1.2rem', fontWeight: 'bold' }}>Screenshots are restricted</span>
+        </div>
+      )}
       
       {/* Responsive styles */}
       <style>{`
@@ -276,6 +347,19 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           }
         }
       `}</style>
+
+      {/* Global Notification Banner */}
+      {settings?.globalNotification && (
+        <div style={{
+          position: 'fixed', top: 0, left: 0, right: 0,
+          background: 'linear-gradient(135deg, #f59e0b, #d97706)',
+          color: 'white', textAlign: 'center',
+          padding: '0.6rem 1rem', fontSize: '0.9rem', fontWeight: '700',
+          zIndex: 9998, boxShadow: '0 2px 8px rgba(0,0,0,0.2)'
+        }}>
+          📢 {settings.globalNotification}
+        </div>
+      )}
 
       {/* Background Watermark Logo */}
       {settings?.logoUrl && (
