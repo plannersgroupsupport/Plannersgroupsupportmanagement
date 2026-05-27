@@ -288,9 +288,9 @@ export default function StudentsPage() {
   }, [students]);
 
   let filteredStudents = [...students].filter(s => 
-      s.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
-      s.loginId.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (Array.isArray(s.studentProfile) ? s.studentProfile[0] : s.studentProfile)?.admissionNo?.toLowerCase().includes(searchTerm.toLowerCase())
+      s.name?.toLowerCase().includes(searchTerm.toLowerCase()) || 
+      s.loginId?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      ((Array.isArray(s.studentProfile) ? s.studentProfile[0] : s.studentProfile)?.admissionNo || '').toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   // Academic Year filter (admin only)
