@@ -26,13 +26,13 @@ export default function StudentsPage() {
     role: 'STUDENT',
     packageType: 'BASIC',
     currentStatus: 'Autocad',
-    admissionDate: new Date().toISOString().split('T')[0],
+    admissionDate: '',
     dob: '',
     sex: 'MALE',
     batch: 'MORNING',
     labNumber: 'LAB-1',
     collegeName: '',
-    courseStartDate: new Date().toISOString().split('T')[0],
+    courseStartDate: '',
     fatherName: '',
     fatherPhone: '',
     address: '',
@@ -44,7 +44,10 @@ export default function StudentsPage() {
     courses: [] as string[]
   });
 
+  const [mounted, setMounted] = useState(false);
+
   useEffect(() => {
+    setMounted(true);
     fetch('/api/users?role=STUDENT')
       .then(res => res.json())
       .then(data => { setStudents(data); setLoading(false); });
@@ -297,6 +300,14 @@ export default function StudentsPage() {
       });
   } else if (sortBy === 'name') {
       filteredStudents.sort((a, b) => a.name.localeCompare(b.name));
+  }
+
+  if (!mounted) {
+    return (
+      <div style={{ textAlign: 'center', padding: '5rem', color: '#64748b' }}>
+         <p>Securely fetching student data...</p>
+      </div>
+    );
   }
 
   return (
