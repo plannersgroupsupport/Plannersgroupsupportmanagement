@@ -33,7 +33,7 @@ export async function POST(req: Request) {
          data: {
              userId: userId,
              type: type,
-             course: type === 'NOTES' ? course : null,
+             course: (type === 'NOTES' || type === 'PROJECT') ? course : null,
              url: fileUrl
          }
       });

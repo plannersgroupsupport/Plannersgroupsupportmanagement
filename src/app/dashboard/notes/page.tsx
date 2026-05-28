@@ -1,22 +1,27 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 'use client';
 import { useState, useEffect } from 'react';
 
-export default function FacultyNotesPage() {
-  const [file, setFile] = useState<File | null>(null);
-  const [notes, setNotes] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [uploading, setUploading] = useState(false);
+const AUTOCAD_CATEGORIES = ['traditional', 'contempary', 'colonial', 'sanction', 'elevation', 'landscape', 'electrical', 'isomatric'];
+const THREED_EXTERIOR = ['traditional', 'contempary', 'colonial'];
+const THREED_INTERIOR = ['bedroom', 'bathroom', 'dinning', 'living', 'kitchen'];
+const LUMION_OPTIONS = ['Option 1', 'Option 2', 'Option 3'];
+
+export default function ProjectSubmissionPage() {
   const [role, setRole] = useState<string | null>(null);
+  const [userId, setUserId] = useState<string>('');
+  const [loading, setLoading] = useState(true);
+  
+  // Student state
+  const [studentCourses, setStudentCourses] = useState<string>('');
+  const [projects, setProjects] = useState<any[]>([]);
+  const [uploadingCategory, setUploadingCategory] = useState<string | null>(null);
 
-  const [selectedCourse, setSelectedCourse] = useState('');
-
-  const fetchNotes = async (uId?: string) => {
-    const url = uId ? `/api/notes?userId=${uId}` : '/api/notes';
-    const res = await fetch(url);
-    const data = await res.json();
-    setNotes(data || []);
-    setLoading(false);
-  };
+  // Faculty state
+  const [facultyLabNumber, setFacultyLabNumber] = useState<string | null>(null);
+  const [students, setStudents] = useState<any[]>([]);
+  const [selectedStudent, setSelectedStudent] = useState<any | null>(null);
+  const [studentProjects, setStudentProjects] = useState<any[]>([]);
 
   useEffect(() => {
     let uId = '';
@@ -27,154 +32,290 @@ export default function FacultyNotesPage() {
             const decoded = JSON.parse(decodeURIComponent(authCookie.split('=')[1]));
             setRole(decoded.role);
             uId = decoded.id;
+            setUserId(uId);
         } catch {}
     }
-    fetchNotes(uId);
+
+    if (uId) {
+       // Fetch user profile to get enrolled courses or lab config
+       fetch(`/api/users?role=STUDENT`)
+         .then(res => res.json())
+         .then(studentList => {
+             if (Array.isArray(studentList)) {
+                 setStudents(studentList);
+                 const myStudentProfile = studentList.find(s => s.id === uId);
+                 if (myStudentProfile && myStudentProfile.studentProfile?.courseName) {
+                     setStudentCourses(myStudentProfile.studentProfile.courseName);
+                 }
+             }
+         });
+         
+       fetch('/api/users?role=FACULTY')
+         .then(res => res.json())
+         .then(facultyList => {
+             const me = facultyList.find((f: any) => f.id === uId);
+             if (me?.facultyProfile?.lab?.name) {
+                 setFacultyLabNumber(me.facultyProfile.lab.name);
+             }
+         });
+         
+       fetchProjects(uId);
+    }
   }, []);
 
-  const handleDelete = async (id: string, filename: string) => {
-    if (!confirm(`Are you sure you want to delete "${filename}"?`)) return;
-
-    try {
-        const res = await fetch(`/api/notes?id=${id}`, { method: 'DELETE' });
-        if (res.ok) {
-            setNotes(notes.filter(n => n.id !== id));
-        } else {
-            alert('Failed to remove note.');
-        }
-    } catch {
-        alert('An error occurred while deleting.');
-    }
+  const fetchProjects = async (uId: string) => {
+    const res = await fetch(`/api/notes?userId=${uId}&type=PROJECT`);
+    const data = await res.json();
+    setProjects(data || []);
+    setLoading(false);
   };
 
-  const handleUpload = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleUpload = async (event: React.ChangeEvent<HTMLInputElement>, courseKey: string, requirePdf: boolean) => {
+    const file = event.target.files?.[0];
     if (!file) return;
 
-    setUploading(true);
-
-    let userId = '';
-    const cookies = document.cookie.split(';');
-    const authCookie = cookies.find(c => c.trim().startsWith('auth_token='));
-    if (authCookie) {
-        try {
-            const decoded = JSON.parse(decodeURIComponent(authCookie.split('=')[1]));
-            userId = decoded.id;
-        } catch {}
-    }
-
-    if (!userId) {
-        alert('You must be logged in to upload notes.');
-        setUploading(false);
+    if (requirePdf && file.type !== 'application/pdf') {
+        alert('This section requires PDF documents only.');
+        event.target.value = '';
         return;
     }
+
+    if (!requirePdf) {
+        if (!['image/png', 'image/jpeg', 'image/jpg'].includes(file.type)) {
+            alert('Images should be in PNG or JPG format.');
+            event.target.value = '';
+            return;
+        }
+        if (file.size > 7 * 1024 * 1024) {
+            alert(`File size exceeds 7MB (Your file: ${(file.size/1024/1024).toFixed(1)}MB). Please compress and try again.`);
+            event.target.value = '';
+            return;
+        }
+    }
+
+    setUploadingCategory(courseKey);
 
     const formData = new FormData();
     formData.append('file', file);
     formData.append('userId', userId);
-    formData.append('type', 'NOTES');
-    formData.append('course', selectedCourse);
+    formData.append('type', 'PROJECT');
+    formData.append('course', courseKey);
 
-    const res = await fetch('/api/upload', {
-        method: 'POST',
-        body: formData
-    });
-
-    if (res.ok) {
-        alert(`Study Material "${file.name}" uploaded successfully for ${selectedCourse || 'All Courses'}!`);
-        setFile(null);
-        setSelectedCourse('');
-        fetchNotes();
-        const fileInput = document.getElementById('noteUploadInput') as HTMLInputElement;
-        if(fileInput) fileInput.value = '';
-    } else {
-        alert('Failed to upload material.');
+    try {
+        const res = await fetch('/api/upload', {
+            method: 'POST',
+            body: formData
+        });
+        if (res.ok) {
+            alert('Project submitted successfully!');
+            fetchProjects(userId);
+        } else {
+            alert('Failed to upload project.');
+        }
+    } catch {
+        alert('Network error during upload.');
+    } finally {
+        setUploadingCategory(null);
+        event.target.value = '';
     }
-    setUploading(false);
   };
 
+  const handleDelete = async (id: string, filename: string) => {
+    if (!confirm(`Are you sure you want to remove sequence: "${filename}"?`)) return;
+    try {
+        const res = await fetch(`/api/notes?id=${id}`, { method: 'DELETE' });
+        if (res.ok) {
+            setProjects(projects.filter(p => p.id !== id));
+            if (selectedStudent) {
+               setStudentProjects(studentProjects.filter(p => p.id !== id));
+            }
+        } else {
+            alert('Failed to remove project.');
+        }
+    } catch {
+        alert('An error occurred.');
+    }
+  };
+
+  const handleSelectStudent = async (student: any) => {
+      setSelectedStudent(student);
+      setStudentProjects([]);
+      const res = await fetch(`/api/notes?userId=${student.id}&type=PROJECT`);
+      const data = await res.json();
+      setStudentProjects(data || []);
+  };
+
+  const hasCourse = (term: string) => {
+      return new RegExp(term, 'i').test(studentCourses);
+  };
+
+  const getUploadedProject = (courseKey: string, arr: any[] = projects) => {
+      return arr.find(p => p.course === courseKey);
+  };
+
+  // Student Views Map Configuration
+  const renderSubheading = (title: string, keys: string[], prefix: string, requiresPdf: boolean) => {
+      return (
+          <div style={{ marginBottom: '2rem' }}>
+              <h4 style={{ color: '#475569', borderBottom: '1px solid #e2e8f0', paddingBottom: '0.5rem', marginBottom: '1rem', display: 'flex', justifyContent: 'space-between' }}>
+                  {title}
+                  {!requiresPdf && <span style={{ fontSize: '0.75rem', fontWeight: 'normal', color: '#f59e0b', background: '#fef3c7', padding: '0.2rem 0.6rem', borderRadius: '4px' }}>PNG/JPG • Max 7MB</span>}
+                  {requiresPdf && <span style={{ fontSize: '0.75rem', fontWeight: 'normal', color: '#10b981', background: '#dcfce7', padding: '0.2rem 0.6rem', borderRadius: '4px' }}>PDF Only</span>}
+              </h4>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))', gap: '1rem' }}>
+                  {keys.map(k => {
+                      const courseKey = `${prefix}_${k}`;
+                      const proj = getUploadedProject(courseKey);
+                      return (
+                          <div key={courseKey} style={{ border: '1px solid #e2e8f0', background: '#f8fafc', borderRadius: '8px', padding: '1rem', display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                              <div style={{ fontWeight: '600', textTransform: 'capitalize' }}>{k}</div>
+                              {proj ? (
+                                  <div style={{ display: 'flex', gap: '0.5rem' }}>
+                                      <a href={proj.url} target="_blank" rel="noopener noreferrer" style={{ flex: 1, textAlign: 'center', background: 'var(--primary)', color: 'white', padding: '0.4rem', borderRadius: '4px', textDecoration: 'none', fontSize: '0.8rem', fontWeight: 'bold' }}>View</a>
+                                      <button onClick={() => handleDelete(proj.id, k)} style={{ background: '#ef4444', color: 'white', border: 'none', borderRadius: '4px', padding: '0.4rem', cursor: 'pointer', fontWeight: 'bold' }}>✕</button>
+                                  </div>
+                              ) : (
+                                  <div>
+                                      <label style={{ display: 'block', background: 'white', border: '1px dashed var(--primary)', color: 'var(--primary)', textAlign: 'center', padding: '0.5rem', borderRadius: '4px', cursor: 'pointer', fontSize: '0.85rem' }}>
+                                          {uploadingCategory === courseKey ? 'Uploading...' : 'Upload File'}
+                                          <input type="file" style={{ display: 'none' }} accept={requiresPdf ? "application/pdf" : "image/png, image/jpeg"} onChange={e => handleUpload(e, courseKey, requiresPdf)} disabled={uploadingCategory !== null} />
+                                      </label>
+                                  </div>
+                              )}
+                          </div>
+                      );
+                  })}
+              </div>
+          </div>
+      );
+  };
+
+  if (loading) return <div style={{ padding: '2rem', textAlign: 'center', color: '#64748b' }}>Loading Project Submission Panel...</div>;
+
+  // Faculty Layout
+  if (role === 'FACULTY' || role === 'SUPERADMIN') {
+      const filteredStudents = facultyLabNumber ? students.filter(s => Array.isArray(s.studentProfile) ? s.studentProfile[0]?.labNumber === facultyLabNumber : s.studentProfile?.labNumber === facultyLabNumber) : students;
+      
+      return (
+          <div style={{ display: 'flex', flexDirection: 'column', minHeight: '85vh', gap: '1rem' }}>
+              <div>
+                  <h1 style={{ fontSize: '2rem', marginBottom: '0.5rem' }}>Student Projects Viewer</h1>
+                  <p style={{ color: '#64748b' }}>Select a student from your assigned lab to view and download their submitted projects.</p>
+                  {facultyLabNumber && <span style={{ display: 'inline-block', background: '#e0e7ff', color: '#4338ca', padding: '0.25rem 0.75rem', borderRadius: '20px', fontSize: '0.8rem', fontWeight: 'bold', marginTop: '0.5rem' }}>Constrained to {facultyLabNumber}</span>}
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: 'minmax(250px, 300px) 1fr', gap: '2rem', flex: 1 }}>
+                  {/* Left Sidebar - Student List */}
+                  <div className="card" style={{ overflowY: 'auto', maxHeight: '70vh', padding: '1rem' }}>
+                      <h3 style={{ borderBottom: '1px solid var(--border)', paddingBottom: '0.5rem', marginBottom: '1rem', color: 'var(--primary)' }}>Your Students</h3>
+                      {filteredStudents.length === 0 ? <div style={{ fontSize: '0.85rem', color: '#94a3b8' }}>No students found in lab.</div> : 
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                              {filteredStudents.map(s => (
+                                  <button 
+                                      key={s.id} 
+                                      onClick={() => handleSelectStudent(s)}
+                                      style={{ 
+                                          padding: '0.75rem', textAlign: 'left', borderRadius: '8px', 
+                                          background: selectedStudent?.id === s.id ? 'var(--primary)' : '#f8fafc', 
+                                          color: selectedStudent?.id === s.id ? 'white' : 'var(--foreground)',
+                                          border: selectedStudent?.id === s.id ? '1px solid transparent' : '1px solid #e2e8f0',
+                                          cursor: 'pointer', transition: 'all 0.2s', fontWeight: '600', fontSize: '0.9rem' 
+                                      }}
+                                  >
+                                      {s.name}
+                                  </button>
+                              ))}
+                          </div>
+                      }
+                  </div>
+
+                  {/* Right View - Project Gallery */}
+                  <div className="card" style={{ overflowY: 'auto', maxHeight: '70vh', padding: '1.5rem' }}>
+                      {!selectedStudent ? (
+                          <div style={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#94a3b8', fontStyle: 'italic' }}>
+                              Select a student to view their projects.
+                          </div>
+                      ) : (
+                          <div>
+                              <div style={{ marginBottom: '2rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '2px solid var(--border)', paddingBottom: '1rem' }}>
+                                  <div>
+                                      <h2 style={{ margin: 0, color: 'var(--primary)' }}>{selectedStudent.name}'s Projects</h2>
+                                      <div style={{ fontSize: '0.85rem', color: '#64748b', marginTop: '0.2rem' }}>Enrolled: {selectedStudent.studentProfile?.courseName || 'N/A'}</div>
+                                  </div>
+                                  <span style={{ background: '#ecfdf5', color: '#10b981', padding: '0.3rem 0.8rem', borderRadius: '20px', fontSize: '0.8rem', border: '1px solid #a7f3d0', fontWeight: 'bold' }}>
+                                      {studentProjects.length} Uploads
+                                  </span>
+                              </div>
+
+                              {studentProjects.length === 0 ? (
+                                  <p style={{ color: '#64748b' }}>This student hasn't submitted any projects yet.</p>
+                              ) : (
+                                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '1rem' }}>
+                                      {studentProjects.map(p => (
+                                          <div key={p.id} style={{ border: '1px solid #e2e8f0', borderRadius: '8px', padding: '1rem', background: '#f8fafc', display: 'flex', flexDirection: 'column' }}>
+                                              <div style={{ fontSize: '0.75rem', color: '#94a3b8', fontWeight: 'bold', marginBottom: '0.5rem', textTransform: 'uppercase' }}>
+                                                  {p.course?.replace('_', ' » ')}
+                                              </div>
+                                              
+                                              {p.url.toLowerCase().endsWith('.pdf') ? (
+                                                  <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem', background: '#e2e8f0', borderRadius: '4px', marginBottom: '1rem', fontWeight: 'bold', color: '#ef4444' }}>PDF Document</div>
+                                              ) : (
+                                                  <div style={{ flex: 1, height: '120px', borderRadius: '4px', overflow: 'hidden', marginBottom: '1rem', background: '#e2e8f0', backgroundImage: `url(${p.url})`, backgroundSize: 'cover', backgroundPosition: 'center' }} />
+                                              )}
+                                              
+                                              <div style={{ display: 'flex', gap: '0.5rem' }}>
+                                                  <a href={p.url} download target="_blank" rel="noopener noreferrer" style={{ flex: 1, textAlign: 'center', background: 'var(--primary)', color: 'white', padding: '0.5rem', fontSize: '0.8rem', fontWeight: 'bold', textDecoration: 'none', borderRadius: '4px' }}>Download</a>
+                                              </div>
+                                          </div>
+                                      ))}
+                                  </div>
+                              )}
+                          </div>
+                      )}
+                  </div>
+              </div>
+          </div>
+      );
+  }
+
+  // Student Layout
   return (
     <div>
-      <style>{`
-        @media (max-width: 768px) {
-          .notes-upload-form { grid-template-columns: 1fr !important; }
-          .notes-item { flex-direction: column !important; align-items: flex-start !important; gap: 0.75rem !important; }
-          .notes-item-actions { width: 100%; display: flex; gap: 0.5rem; }
-          .notes-item-actions a, .notes-item-actions button { flex: 1; text-align: center; }
-        }
-      `}</style>
-      <h1 style={{ fontSize: '2rem', marginBottom: '1rem' }}>
-        {role === 'STUDENT' ? 'Study Materials' : 'Upload Study Materials'}
-      </h1>
+      <h1 style={{ fontSize: '2rem', marginBottom: '0.5rem' }}>Project Submission</h1>
       <p style={{ color: '#64748b', marginBottom: '2rem' }}>
-        {role === 'STUDENT' ? 'View and download study materials shared by your faculty.' : "Share PDF notes and image resources directly into your students' portals."}
+        Submit assignments securely to your instructors. Submissions are categorized strictly by your enrolled academic units.
       </p>
 
-      {role !== 'STUDENT' && (
-      <div className="card" style={{ marginBottom: '2rem' }}>
-        <h3 style={{ color: 'var(--primary)', marginBottom: '0.5rem' }}>Distribute File</h3>
-        <p style={{ color: '#64748b', fontSize: '0.9rem', marginBottom: '1rem' }}>Max file size: 10MB.</p>
-        <form onSubmit={handleUpload} className="notes-upload-form" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr auto', gap: '1rem', alignItems: 'end' }}>
-          <div>
-            <label style={{ fontSize: '0.8rem', fontWeight: 'bold', color: '#64748b', display: 'block', marginBottom: '0.5rem' }}>Assignment Course</label>
-            <select 
-                value={selectedCourse} 
-                onChange={e => setSelectedCourse(e.target.value)}
-                style={{ width: '100%', padding: '0.8rem', border: '1px solid var(--border)', borderRadius: '6px', background: 'white' }}
-            >
-                <option value="">Public (All Courses)</option>
-                {['REVIT', 'REVIT(BIM)', 'AUTOCAD', '3DS MAX', 'SKETCHUP', 'LUMION', 'INTERIOR DESIGNING', 'VASTU', 'QUANTITY SURVEY', 'ESTIMATION'].map(c => (
-                    <option key={c} value={c}>{c}</option>
-                ))}
-            </select>
+      {hasCourse('autocad') && (
+          <div className="card" style={{ marginBottom: '2rem' }}>
+             <h3 style={{ color: '#1d4ed8', borderBottom: '2px solid #bfdbfe', paddingBottom: '0.5rem', marginBottom: '1.5rem' }}>AutoCAD Submissions</h3>
+             {renderSubheading('Project Requirements', AUTOCAD_CATEGORIES, 'AUTOCAD', true)}
           </div>
-          <div>
-            <label style={{ fontSize: '0.8rem', fontWeight: 'bold', color: '#64748b', display: 'block', marginBottom: '0.5rem' }}>Select File</label>
-            <input id="noteUploadInput" type="file" required onChange={e => setFile(e.target.files?.[0] || null)} style={{ border: '1px dashed var(--border)', padding: '0.75rem', width: '100%', borderRadius: '6px', cursor: 'pointer', background: 'white', fontSize: '0.85rem' }} />
-          </div>
-          <button type="submit" disabled={uploading || !file} style={{ padding: '0.85rem 2rem', borderRadius: '6px', background: 'var(--primary)', color: 'white', border: 'none', fontWeight: 'bold', cursor: 'pointer' }}>
-            {uploading ? 'Uploading...' : 'Upload to Portal'}
-          </button>
-        </form>
-      </div>
       )}
 
-      <div className="card">
-        <h3 style={{ color: 'var(--primary)', marginBottom: '1rem' }}>{role === 'STUDENT' ? 'Available Materials' : 'Uploaded Materials'}</h3>
-        {loading ? (
-             <p style={{ color: '#64748b', textAlign: 'center', padding: '1rem' }}>Loading notes...</p>
-        ) : notes.length === 0 ? (
-             <p style={{ color: '#64748b', textAlign: 'center', padding: '1rem' }}>No study materials uploaded yet.</p>
-        ) : (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                {notes.map(note => (
-                    <div key={note.id} className="notes-item" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '1rem', border: '1px solid var(--border)', borderRadius: '8px', background: '#f8fafc' }}>
-                        <div>
-                            <div style={{ fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                                {note.url.split('-').slice(1).join('-') || note.url.split('/').pop()}
-                                {note.course && (
-                                    <span style={{ fontSize: '0.7rem', background: 'var(--primary)', color: 'white', padding: '0.1rem 0.6rem', borderRadius: '10px', textTransform: 'uppercase' }}>{note.course}</span>
-                                )}
-                            </div>
-                            <div style={{ fontSize: '0.8rem', color: '#64748b', marginTop: '0.25rem' }}>
-                                Uploaded by {note.user?.name || 'System'} on {new Date(note.uploadedAt).toLocaleDateString()}
-                            </div>
-                        </div>
-                        <div className="notes-item-actions" style={{ display: 'flex', gap: '0.5rem' }}>
-                            <a href={note.url} target="_blank" rel="noopener noreferrer" style={{ background: 'white', border: '1px solid var(--border)', padding: '0.5rem 1rem', borderRadius: '4px', textDecoration: 'none', color: 'var(--primary)', fontSize: '0.9rem', fontWeight: 'bold' }}>
-                                {role === 'STUDENT' ? 'Download' : 'View File'}
-                            </a>
-                            {role !== 'STUDENT' && (
-                            <button onClick={() => handleDelete(note.id, note.url.split('-').slice(1).join('-') || note.url.split('/').pop() || '')} style={{ background: '#ef4444', border: 'none', color: 'white', padding: '0.5rem 1rem', borderRadius: '4px', fontSize: '0.9rem', cursor: 'pointer' }}>
-                                Remove
-                            </button>
-                            )}
-                        </div>
-                    </div>
-                ))}
-            </div>
-        )}
-      </div>
+      {hasCourse('3d modeling|3ds max|sketchup') && (
+          <div className="card" style={{ marginBottom: '2rem' }}>
+             <h3 style={{ color: '#7c3aed', borderBottom: '2px solid #ddd6fe', paddingBottom: '0.5rem', marginBottom: '1.5rem' }}>3D Modeling</h3>
+             {renderSubheading('Exterior Projects', THREED_EXTERIOR, '3DMODELING_Exterior', false)}
+             {renderSubheading('Interior Projects', THREED_INTERIOR, '3DMODELING_Interior', false)}
+          </div>
+      )}
+
+      {hasCourse('lumion') && (
+          <div className="card" style={{ marginBottom: '2rem' }}>
+             <h3 style={{ color: '#059669', borderBottom: '2px solid #a7f3d0', paddingBottom: '0.5rem', marginBottom: '1.5rem' }}>Lumion Projects</h3>
+             {renderSubheading('File Uploads', LUMION_OPTIONS, 'LUMION', false)}
+          </div>
+      )}
+
+      {!hasCourse('autocad') && !hasCourse('3d modeling|3ds max|sketchup') && !hasCourse('lumion') && (
+          <div className="card" style={{ textAlign: 'center', padding: '3rem', color: '#64748b' }}>
+              <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>📋</div>
+              <h3>No Project Categories Available</h3>
+              <p>Your current course enrollments ({studentCourses || 'None'}) do not require structured project uploads.</p>
+          </div>
+      )}
+
     </div>
   );
 }

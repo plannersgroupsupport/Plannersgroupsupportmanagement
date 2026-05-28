@@ -153,13 +153,13 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   }
   else if (role === 'STUDENT') {
     links.push({ href: '/dashboard/progress', label: '📈 My Progress' });
-    links.push({ href: '/dashboard/notes', label: '📚 Study Materials' });
+    links.push({ href: '/dashboard/notes', label: '📂 Project Submission' });
     links.push({ href: '/dashboard/profile', label: '👤 My Profile' });
   }
   else if (role === 'FACULTY') {
     links.push({ href: '/dashboard/students', label: '🎓 Students' });
     links.push({ href: '/dashboard/attendance', label: '✅ Mark Attendance' });
-    links.push({ href: '/dashboard/notes', label: '📤 Upload Notes' });
+    links.push({ href: '/dashboard/notes', label: '📂 Project Submission' });
     links.push({ href: '/dashboard/profile', label: '👤 My Profile' });
   }
   else if (role === 'ACCOUNTANT') {

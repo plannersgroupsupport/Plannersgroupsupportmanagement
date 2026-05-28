@@ -8,7 +8,8 @@ export async function GET(req: Request) {
     const { searchParams } = new URL(req.url);
     const userId = searchParams.get('userId');
     
-    let whereClause: any = { type: 'NOTES' };
+    const typeParam = searchParams.get('type') || 'NOTES';
+    let whereClause: any = { type: typeParam };
     
     if (userId) {
        const user = await (prisma as any).user.findUnique({
