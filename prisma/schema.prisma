@@ -91,6 +91,7 @@ model FeePayment {
   amount       Float
   month        String   // e.g., "2023-10"
   status       String   // PAID, PENDING
+  billNumber   String?  // Receipt / Bill number added by accountant
   paidDate     DateTime? // Exact date payment was made
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt

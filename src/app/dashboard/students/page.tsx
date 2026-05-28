@@ -48,7 +48,7 @@ export default function StudentsPage() {
 
   useEffect(() => {
     setMounted(true);
-    fetch('/api/users?role=STUDENT')
+    fetch('/api/users?role=STUDENT&includeFees=true')
       .then(res => res.json())
       .then(data => { setStudents(Array.isArray(data) ? data : []); setLoading(false); })
       .catch(() => { setStudents([]); setLoading(false); });
@@ -368,6 +368,32 @@ export default function StudentsPage() {
           <span style={{ padding: '0.35rem 1rem', borderRadius: '20px', fontSize: '0.8rem', fontWeight: '700', background: '#fff7ed', color: '#c2410c', border: '1px solid #fed7aa' }}>
             ⚠️ No Lab Assigned — Showing All Students
           </span>
+        )}
+        {role === 'FACULTY' && (
+          <button
+            onClick={() => {
+              const phones = filteredStudents
+                .map(s => (s.phone || '').replace(/\D/g, '').replace(/^91/, ''))
+                .filter(p => p.length >= 10)
+                .join(',');
+              if (!phones) { alert('No phone numbers available for your lab students.'); return; }
+              navigator.clipboard.writeText(phones)
+                .then(() => alert(`✅ ${filteredStudents.length} phone numbers copied!\n\nPaste directly into WhatsApp > New Group > Add Participants`))
+                .catch(() => {
+                  // Fallback for browsers that block clipboard
+                  const ta = document.createElement('textarea');
+                  ta.value = phones;
+                  document.body.appendChild(ta);
+                  ta.select();
+                  document.execCommand('copy');
+                  document.body.removeChild(ta);
+                  alert(`✅ ${filteredStudents.length} phone numbers copied!`);
+                });
+            }}
+            style={{ padding: '0.5rem 1.2rem', borderRadius: '20px', fontSize: '0.8rem', fontWeight: '700', background: '#25D366', color: 'white', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.4rem', boxShadow: '0 2px 8px rgba(37,211,102,0.3)' }}
+          >
+            📲 Copy WhatsApp Numbers
+          </button>
         )}
       </div>
       
@@ -849,6 +875,34 @@ export default function StudentsPage() {
                           </div>
                       </div>
                   </div>
+
+                  {/* Fees Summary — visible to FACULTY and SUPERADMIN */}
+                  {(role === 'FACULTY' || role === 'SUPERADMIN') && (() => {
+                    const fees = viewingStudent.feePayments || [];
+                    const pkgType = profile?.packageType || 'BASIC';
+                    const totalFee = profile?.totalCourseFee ?? (pkgType === 'PREMIUM' ? 65000 : 35000);
+                    const totalPaid = fees.filter((f: any) => f.status === 'PAID').reduce((s: number, f: any) => s + (f.amount || 0), 0);
+                    const remaining = Math.max(0, totalFee - totalPaid);
+                    return (
+                      <div style={{ marginTop: '2rem' }}>
+                        <SectionTitle title="Fees Summary" />
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '1rem' }}>
+                          <div style={{ background: '#f0fdf4', border: '1px solid #86efac', borderRadius: '12px', padding: '1rem', textAlign: 'center' }}>
+                            <div style={{ fontSize: '0.7rem', fontWeight: '700', color: '#15803d', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Total Fee</div>
+                            <div style={{ fontSize: '1.5rem', fontWeight: '800', color: '#15803d' }}>₹{totalFee.toLocaleString()}</div>
+                          </div>
+                          <div style={{ background: '#eff6ff', border: '1px solid #93c5fd', borderRadius: '12px', padding: '1rem', textAlign: 'center' }}>
+                            <div style={{ fontSize: '0.7rem', fontWeight: '700', color: '#1d4ed8', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Total Paid</div>
+                            <div style={{ fontSize: '1.5rem', fontWeight: '800', color: '#1d4ed8' }}>₹{totalPaid.toLocaleString()}</div>
+                          </div>
+                          <div style={{ background: remaining > 0 ? '#fef2f2' : '#f0fdf4', border: `1px solid ${remaining > 0 ? '#fca5a5' : '#86efac'}`, borderRadius: '12px', padding: '1rem', textAlign: 'center' }}>
+                            <div style={{ fontSize: '0.7rem', fontWeight: '700', color: remaining > 0 ? '#dc2626' : '#15803d', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Remaining</div>
+                            <div style={{ fontSize: '1.5rem', fontWeight: '800', color: remaining > 0 ? '#dc2626' : '#15803d' }}>₹{remaining.toLocaleString()}</div>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })()}
               </div>
           </div>
           );

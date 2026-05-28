@@ -17,6 +17,7 @@ export async function POST(req: Request) {
         amount: Number(data.amount) || 10000,
         month: data.month,
         status: data.status || 'PAID',
+        billNumber: data.billNumber || null,
         paidDate: data.paidDate ? new Date(data.paidDate) : new Date(),
       }
     });
@@ -68,6 +69,7 @@ export async function PATCH(req: Request) {
     if (data.month !== undefined) updateData.month = data.month;
     if (data.status !== undefined) updateData.status = data.status;
     if (data.paidDate !== undefined) updateData.paidDate = data.paidDate ? new Date(data.paidDate) : null;
+    if (data.billNumber !== undefined) updateData.billNumber = data.billNumber;
 
     const feeRecord = await prisma.feePayment.update({
       where: { id: data.id },

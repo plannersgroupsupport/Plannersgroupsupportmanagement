@@ -30,7 +30,7 @@ const generateMonthOptions = (student: any) => {
 export default function AccountantFeesPage() {
     const [students, setStudents] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
-    const [paymentData, setPaymentData] = useState<Record<string, { amount: string, month: string, paidDate: string }>>({});
+    const [paymentData, setPaymentData] = useState<Record<string, { amount: string, month: string, paidDate: string, billNumber: string }>>({});
     const [searchTerm, setSearchTerm] = useState('');
 
     const fetchStudents = () => {
@@ -39,10 +39,10 @@ export default function AccountantFeesPage() {
           .then(data => { 
               if (Array.isArray(data)) {
                   setStudents(data); 
-                  const initData: Record<string, { amount: string, month: string, paidDate: string }> = {};
+                  const initData: Record<string, { amount: string, month: string, paidDate: string, billNumber: string }> = {};
                   data.forEach((s: any) => {
                       const opts = generateMonthOptions(s);
-                      initData[s.id] = { amount: '', month: opts[0], paidDate: new Date().toISOString().split('T')[0] };
+                      initData[s.id] = { amount: '', month: opts[0], paidDate: new Date().toISOString().split('T')[0], billNumber: '' };
                   });
                   setPaymentData(initData);
               } else {
@@ -77,7 +77,8 @@ export default function AccountantFeesPage() {
                month: data.month,
                amount: Number(data.amount),
                status: 'PAID',
-               paidDate: data.paidDate
+               paidDate: data.paidDate,
+               billNumber: data.billNumber || null
            })
         });
 
@@ -116,6 +117,15 @@ export default function AccountantFeesPage() {
         } else {
             alert('Failed to update receipt date.');
         }
+    };
+
+    const updateBillNumber = async (paymentId: string, billNumber: string) => {
+        const res = await fetch('/api/fees', {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ id: paymentId, billNumber })
+        });
+        if (!res.ok) alert('Failed to update bill number.');
     };
 
     const updateCourseFee = async (studentId: string, newFee: string) => {
@@ -182,6 +192,7 @@ export default function AccountantFeesPage() {
                     <th>Balance Owed</th>
                     <th>Select Admission Month Cycle</th>
                     <th>Amount Paid (₹)</th>
+                    <th>Bill No.</th>
                     <th>Receipt Date</th>
                     <th>Actions</th>
                   </tr>
@@ -220,11 +231,12 @@ export default function AccountantFeesPage() {
                               Paid: ₹{totalPaidAmount.toLocaleString()}
                           </div>
                           {s.feePayments && s.feePayments.length > 0 && (
-                              <div style={{ fontSize: '0.75rem', color: '#64748b', maxHeight: '100px', overflowY: 'auto', border: '1px solid var(--border)', padding: '0.3rem', borderRadius: '4px' }}>
+                              <div style={{ fontSize: '0.75rem', color: '#64748b', maxHeight: '130px', overflowY: 'auto', border: '1px solid var(--border)', padding: '0.3rem', borderRadius: '4px' }}>
                                   {s.feePayments.map((p: any) => (
-                                      <div key={p.id} style={{ borderBottom: '1px solid #f1f5f9', padding: '4px 0', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                          <span>
+                                      <div key={p.id} style={{ borderBottom: '1px solid #f1f5f9', padding: '4px 0', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '0.3rem' }}>
+                                          <span style={{ flex: 1 }}>
                                               {p.month}: ₹{p.amount} 
+                                              {p.billNumber && <span style={{ marginLeft: '4px', color: '#4f46e5', fontWeight: '700' }}>#{p.billNumber}</span>}
                                               <span style={{ fontSize: '0.65rem', color: '#94a3b8', display: 'flex', alignItems: 'center', gap: '0.3rem', marginTop: '0.2rem' }}>
                                                   Paid: 
                                                   <input 
@@ -232,6 +244,16 @@ export default function AccountantFeesPage() {
                                                     defaultValue={p.paidDate ? p.paidDate.split('T')[0] : (p.createdAt ? p.createdAt.split('T')[0] : '')}
                                                     onBlur={(e) => updatePaidDate(p.id, e.target.value)}
                                                     style={{ padding: '0.1rem', border: '1px solid var(--border)', borderRadius: '4px', fontSize: '0.65rem', color: '#64748b' }}
+                                                  />
+                                              </span>
+                                              <span style={{ fontSize: '0.65rem', color: '#94a3b8', display: 'flex', alignItems: 'center', gap: '0.3rem', marginTop: '0.2rem' }}>
+                                                  Bill#:
+                                                  <input
+                                                    type="text"
+                                                    defaultValue={p.billNumber || ''}
+                                                    placeholder="Bill No."
+                                                    onBlur={(e) => updateBillNumber(p.id, e.target.value)}
+                                                    style={{ padding: '0.1rem', border: '1px solid var(--border)', borderRadius: '4px', fontSize: '0.65rem', color: '#4f46e5', width: '70px' }}
                                                   />
                                               </span>
                                           </span>
@@ -278,6 +300,15 @@ export default function AccountantFeesPage() {
                              value={paymentData[s.id]?.amount || ''}
                              onChange={e => handleInput(s.id, 'amount', e.target.value)}
                              style={{ padding: '0.5rem', width: '100px', borderRadius: '4px', border: '1px solid var(--border)', fontWeight: 'bold' }}
+                          />
+                      </td>
+                      <td>
+                          <input 
+                             type="text" 
+                             placeholder="Bill No." 
+                             value={paymentData[s.id]?.billNumber || ''}
+                             onChange={e => handleInput(s.id, 'billNumber', e.target.value)}
+                             style={{ padding: '0.5rem', width: '90px', borderRadius: '4px', border: '2px solid #4f46e5', fontWeight: '700', color: '#4f46e5', background: '#f5f3ff' }}
                           />
                       </td>
                       <td>
