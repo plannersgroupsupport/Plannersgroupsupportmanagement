@@ -112,6 +112,28 @@ export default async function DashboardPage() {
                       <div style={{ position: 'absolute', right: '15%', bottom: '-10%', width: '150px', height: '150px', background: 'rgba(255,255,255,0.15)', borderRadius: '50%', zIndex: 1 }}></div>
                   </div>
 
+                  {/* Notes (Moved to Front) */}
+                  <div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
+                          <h3 style={{ fontSize: '1.2rem', fontWeight: 'bold', margin: 0, color: 'var(--foreground)' }}>Notes</h3>
+                          <Link href="/dashboard/notes" style={{ color: 'var(--primary)', fontSize: '0.95rem', fontWeight: '700', textDecoration: 'none' }}>See all</Link>
+                      </div>
+                      
+                      <div style={{ background: 'white', borderRadius: '16px', boxShadow: '0 4px 20px -5px rgba(0,0,0,0.06)', border: '1px solid var(--border)', overflow: 'hidden' }}>
+                          {notes.length > 0 ? notes.map((note: any, i: number) => {
+                              const noteName = note.url.split('-').slice(1).join('-') || note.url.split('/').pop() || 'Document';
+                              return (
+                              <div key={note.id} style={{ padding: '1rem 1.5rem', borderBottom: i < notes.length - 1 ? '1px solid var(--border)' : 'none' }}>
+                                  <h4 style={{ margin: '0 0 0.4rem 0', fontSize: '0.95rem', fontWeight: '700' }}>{noteName}</h4>
+                                  <a href={note.url} target="_blank" rel="noopener noreferrer" style={{ color: 'var(--primary)', fontSize: '0.85rem', fontWeight: '700', textDecoration: 'none' }}>Download File</a>
+                              </div>
+                              )
+                          }) : (
+                              <div style={{ padding: '2rem', textAlign: 'center', color: '#64748b', fontSize: '0.9rem' }}>No recent notes.</div>
+                          )}
+                      </div>
+                  </div>
+
                   {/* Enrolled Courses */}
                   <div>
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
@@ -140,31 +162,17 @@ export default async function DashboardPage() {
                           )}
                       </div>
                   </div>
-                  
-                  {/* Notes */}
+
+                  {/* Certificate Application */}
                   <div>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
-                          <h3 style={{ fontSize: '1.2rem', fontWeight: 'bold', margin: 0, color: 'var(--foreground)' }}>Notes</h3>
-                          <Link href="/dashboard/notes" style={{ color: 'var(--primary)', fontSize: '0.95rem', fontWeight: '700', textDecoration: 'none' }}>See all</Link>
-                      </div>
-                      
-                      <div style={{ background: 'white', borderRadius: '16px', boxShadow: '0 4px 20px -5px rgba(0,0,0,0.06)', border: '1px solid var(--border)', overflow: 'hidden' }}>
-                          {notes.length > 0 ? notes.map((note: any, i: number) => {
-                              const noteName = note.url.split('-').slice(1).join('-') || note.url.split('/').pop() || 'Document';
-                              return (
-                              <div key={note.id} style={{ padding: '1rem 1.5rem', borderBottom: i < notes.length - 1 ? '1px solid var(--border)' : 'none' }}>
-                                  <h4 style={{ margin: '0 0 0.4rem 0', fontSize: '0.95rem', fontWeight: '700' }}>{noteName}</h4>
-                                  <p style={{ margin: '0 0 0.5rem 0', fontSize: '0.8rem', color: '#64748b', lineHeight: '1.5' }}>
-                                      Uploaded by <span style={{fontWeight: 600}}>{note.user?.name || 'System'}</span> on {new Date(note.uploadedAt).toLocaleDateString()}
-                                  </p>
-                                  <a href={note.url} target="_blank" rel="noopener noreferrer" style={{ color: 'var(--primary)', fontSize: '0.85rem', fontWeight: '700', textDecoration: 'none' }}>Download File</a>
-                              </div>
-                              )
-                          }) : (
-                              <div style={{ padding: '2rem', textAlign: 'center', color: '#64748b', fontSize: '0.9rem' }}>No recent notes.</div>
-                          )}
-                      </div>
+                      <h3 style={{ fontSize: '1.15rem', fontWeight: 'bold', marginBottom: '0.75rem', color: 'var(--foreground)' }}>Certification</h3>
+                      <CertificateButton 
+                        studentProfileId={profileData?.id || ''} 
+                        currentStatus={profileData?.currentStatus || ''} 
+                        existingRequest={existingRequest} 
+                      />
                   </div>
+                  
               </div>
 
               {/* RIGHT COLUMN */}
@@ -232,16 +240,6 @@ export default async function DashboardPage() {
                               <div style={{ fontSize: '0.85rem', color: '#64748b' }}>No instructors assigned right now.</div>
                           )}
                       </div>
-                  </div>
-
-                  {/* Certificate Application */}
-                  <div>
-                      <h3 style={{ fontSize: '1.15rem', fontWeight: 'bold', marginBottom: '0.75rem', color: 'var(--foreground)' }}>Certification</h3>
-                      <CertificateButton 
-                        studentProfileId={profileData?.id || ''} 
-                        currentStatus={profileData?.currentStatus || ''} 
-                        existingRequest={existingRequest} 
-                      />
                   </div>
 
                   {/* Attendance Calendar */}
