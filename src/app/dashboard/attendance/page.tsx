@@ -141,6 +141,91 @@ export default function AttendancePage() {
   }, [students, monthData, weekStart]);
 
   const handleMarkAttendance = async (userId: string, dateKey: string, status: string) => {
+    // HOLIDAY is institution-wide — auto-apply to ALL students for that date
+    if (status === 'HOLIDAY') {
+      const targetStudents = facultyLabNumber ? filteredStudents : students;
+      if (!confirm(`Mark HOLIDAY on ${dateKey} for all ${targetStudents.length} students?`)) return;
+      
+      setCalendarLoading(true);
+      try {
+        await Promise.all(targetStudents.map(s =>
+          fetch('/api/attendance', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ userId: s.id, status: 'HOLIDAY', date: dateKey })
+          })
+        ));
+        // Update local state for all students
+        setBulkData(prev => {
+          const updated = { ...prev };
+          targetStudents.forEach(s => {
+            updated[s.id] = { ...(updated[s.id] || {}), [dateKey]: 'HOLIDAY' };
+          });
+          return updated;
+        });
+        setMonthData(prev => {
+          const updated = { ...prev };
+          targetStudents.forEach(s => {
+            updated[s.id] = { ...(updated[s.id] || {}), [dateKey]: 'HOLIDAY' };
+          });
+          return updated;
+        });
+      } catch (err) {
+        console.error('Failed to bulk mark holiday:', err);
+      }
+      setCalendarLoading(false);
+      setPopover(null);
+      return;
+    }
+
+    // If clearing a cell that was HOLIDAY, clear HOLIDAY from ALL students on that date
+    if (status === 'CLEAR') {
+      const currentStatus = bulkData[userId]?.[dateKey];
+      if (currentStatus === 'HOLIDAY') {
+        const targetStudents = facultyLabNumber ? filteredStudents : students;
+        if (!confirm(`Remove HOLIDAY on ${dateKey} from all ${targetStudents.length} students?`)) return;
+        
+        setCalendarLoading(true);
+        try {
+          await Promise.all(targetStudents.map(s =>
+            fetch('/api/attendance', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ userId: s.id, status: 'CLEAR', date: dateKey })
+            })
+          ));
+          setBulkData(prev => {
+            const updated = { ...prev };
+            targetStudents.forEach(s => {
+              if (updated[s.id]) {
+                const copy = { ...updated[s.id] };
+                delete copy[dateKey];
+                updated[s.id] = copy;
+              }
+            });
+            return updated;
+          });
+          setMonthData(prev => {
+            const updated = { ...prev };
+            targetStudents.forEach(s => {
+              if (updated[s.id]) {
+                const copy = { ...updated[s.id] };
+                delete copy[dateKey];
+                updated[s.id] = copy;
+              }
+            });
+            return updated;
+          });
+        } catch (err) {
+          console.error('Failed to bulk clear holiday:', err);
+        }
+        setCalendarLoading(false);
+        setPopover(null);
+        return;
+      }
+    }
+
+    // Normal single-student marking (PRESENT, ABSENT, MEDICAL, CLEAR)
     const cellId = `${userId}-${dateKey}`;
     setMarkingCell(cellId);
     try {
