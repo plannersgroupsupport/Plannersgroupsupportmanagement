@@ -203,6 +203,9 @@ export default function AttendancePage() {
     setWeekStart(d);
   };
 
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
+
   const filteredStudents = useMemo(() => {
     let list = [...students].filter(s => 
       s.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
@@ -219,7 +222,7 @@ export default function AttendancePage() {
     return list;
   }, [students, searchTerm, sortBy, facultyLabNumber]);
 
-  if (loading) return <div style={{ padding: '2rem', textAlign: 'center' }}>Loading student directory...</div>;
+  if (!mounted || loading) return <div style={{ padding: '5rem', textAlign: 'center', color: '#64748b' }}>Loading secure registry...</div>;
 
   return (
     <div style={{ padding: '0 1rem' }}>

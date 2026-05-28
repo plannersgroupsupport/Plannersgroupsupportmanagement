@@ -58,10 +58,21 @@ export default function StudentAttendanceCalendar({ userId }: { userId: string }
     else setCurrentMonth(currentMonth + 1);
   };
 
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
+
   const daysInMonth = getDaysInMonth(currentYear, currentMonth);
   const firstDay = getFirstDayOfMonth(currentYear, currentMonth);
   const today = new Date();
   const todayKey = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+
+  if (!mounted) {
+    return (
+      <div style={{ background: 'white', borderRadius: '16px', border: '1px solid var(--border)', padding: '3rem', textAlign: 'center', color: '#64748b' }}>
+        Loading calendar...
+      </div>
+    );
+  }
 
   return (
     <div style={{ background: 'white', borderRadius: '16px', border: '1px solid var(--border)', overflow: 'hidden', boxShadow: '0 4px 20px -5px rgba(0,0,0,0.06)' }}>

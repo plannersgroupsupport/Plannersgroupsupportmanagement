@@ -103,7 +103,7 @@ export default async function DashboardPage() {
                       boxShadow: '0 10px 25px -5px rgba(0,0,0,0.1)'
                   }}>
                       <div style={{ position: 'relative', zIndex: 2 }}>
-                          <h1 className="dash-h1" style={{ fontSize: '2.2rem', margin: '0 0 0.5rem 0', fontWeight: '800' }}>Welcome back, {studentData?.name.split(' ')[0] || 'Student'}!</h1>
+                          <h1 className="dash-h1" style={{ fontSize: '2.2rem', margin: '0 0 0.5rem 0', fontWeight: '800' }}>Welcome back, {studentData?.name?.split(' ')[0] || userPayload?.name?.split(' ')[0] || 'Student'}!</h1>
                           <p style={{ margin: 0, opacity: 0.9, fontSize: '0.95rem' }}>Always stay updated in your student portal</p>
                       </div>
                       

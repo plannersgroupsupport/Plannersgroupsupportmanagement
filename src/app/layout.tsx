@@ -26,6 +26,20 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
+      <head>
+        <script dangerouslySetInnerHTML={{
+          __html: `
+            if ('serviceWorker' in navigator) {
+              navigator.serviceWorker.getRegistrations().then(function(r) {
+                r.forEach(function(reg) { reg.unregister(); });
+              });
+              caches.keys().then(function(k) {
+                k.forEach(function(key) { caches.delete(key); });
+              });
+            }
+          `
+        }} />
+      </head>
       <body style={{ minHeight: '100vh', position: 'relative' }}>
         {children}
         <div style={{
