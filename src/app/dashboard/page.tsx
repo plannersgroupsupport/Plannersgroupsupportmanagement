@@ -223,8 +223,6 @@ export default async function DashboardPage() {
                                         pointerEvents: 'none',
                                         userSelect: 'none'
                                       }}
-                                      onContextMenu={(e) => e.preventDefault()}
-                                      draggable={false}
                                     />
                                   ) : inst.name.charAt(0)}
                                 </div>
