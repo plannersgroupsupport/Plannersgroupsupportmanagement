@@ -1,25 +1,29 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import crypto from 'crypto';
 
-// GET: Fetch all expenses and total revenue using raw SQL
+// GET: Fetch all expenses and total revenue
 export async function GET() {
   try {
-    const [expenses, revenueData] = (await Promise.all([
-      prisma.$queryRawUnsafe(`SELECT * FROM Expense ORDER BY date DESC`),
-      prisma.$queryRawUnsafe(`SELECT SUM(amount) as total FROM FeePayment`)
-    ])) as [any[], any[]];
+    const [expenses, revenueData] = await Promise.all([
+      prisma.expense.findMany({
+        orderBy: { date: 'desc' }
+      }),
+      prisma.feePayment.aggregate({
+        _sum: { amount: true },
+        where: { status: 'PAID' } // Assuming we only count PAID fees towards revenue
+      })
+    ]);
 
-    const totalRevenue = revenueData[0]?.total || 0;
+    const totalRevenue = revenueData._sum.amount || 0;
     
     return NextResponse.json({ expenses, totalRevenue });
   } catch (err: any) {
-    console.error('Raw SQL Fetch error:', err);
+    console.error('Fetch error:', err);
     return NextResponse.json({ error: err.message }, { status: 500 });
   }
 }
 
-// POST: Add a new expense using raw SQL
+// POST: Add a new expense
 export async function POST(req: Request) {
   try {
     const data = await req.json();
@@ -29,20 +33,22 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Title and amount are required' }, { status: 400 });
     }
 
-    const id = crypto.randomUUID();
-    const now = new Date().toISOString();
-    const expenseDate = date ? new Date(date).toISOString() : now;
+    const expenseDate = date ? new Date(date) : new Date();
     const amountVal = parseFloat(amount);
 
-    await prisma.$executeRawUnsafe(
-      `INSERT INTO "Expense" (id, title, category, amount, date, description, "createdAt", "updatedAt") 
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
-      id, title, category || 'General', amountVal, expenseDate, description || '', now, now
-    );
+    const newExpense = await prisma.expense.create({
+      data: {
+        title,
+        category: category || 'General',
+        amount: amountVal,
+        date: expenseDate,
+        description: description || ''
+      }
+    });
 
-    return NextResponse.json({ success: true, id });
+    return NextResponse.json({ success: true, id: newExpense.id });
   } catch (err: any) {
-    console.error('Raw SQL Save error:', err);
+    console.error('Save error:', err);
     return NextResponse.json({ error: err.message }, { status: 400 });
   }
 }
@@ -55,7 +61,9 @@ export async function DELETE(req: Request) {
 
     if (!id) return NextResponse.json({ error: 'ID is required' }, { status: 400 });
 
-    await prisma.$executeRawUnsafe(`DELETE FROM "Expense" WHERE id = $1`, id);
+    await prisma.expense.delete({
+      where: { id }
+    });
     return NextResponse.json({ success: true });
   } catch (err: any) {
     return NextResponse.json({ error: err.message }, { status: 400 });
