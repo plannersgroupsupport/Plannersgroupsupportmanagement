@@ -2,7 +2,7 @@
 'use client';
 import { useState, useEffect } from 'react';
 
-const AUTOCAD_CATEGORIES = ['traditional', 'contempary', 'colonial', 'sanction', 'elevation', 'landscape', 'electrical', 'isomatric'];
+const AUTOCAD_CATEGORIES = ['traditional', 'contempary', 'colonial', 'sanction', '4 side elevation', 'landscape', 'electrical', 'isomatric', 'Temple', 'Mosque', 'Church', 'Grid drawing', 'Centerline', 'Commercial', 'Setout'];
 const THREED_EXTERIOR = ['traditional', 'contempary', 'colonial'];
 const THREED_INTERIOR = ['bedroom', 'bathroom', 'dinning', 'living', 'kitchen'];
 const LUMION_OPTIONS = ['Option 1', 'Option 2', 'Option 3'];

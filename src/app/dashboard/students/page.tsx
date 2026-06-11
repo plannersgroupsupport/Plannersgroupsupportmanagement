@@ -15,6 +15,7 @@ export default function StudentsPage() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [resetRequests, setResetRequests] = useState<any[]>([]);
   const [activeTab, setActiveTab] = useState('STUDENTS'); // STUDENTS or RESETS
+  const [selectedBatch, setSelectedBatch] = useState<string>('ALL');
   
   const [formData, setFormData] = useState({
     name: '',
@@ -293,6 +294,13 @@ export default function StudentsPage() {
     });
   }
 
+  if (selectedBatch !== 'ALL') {
+      filteredStudents = filteredStudents.filter(s => {
+          const profile = Array.isArray(s.studentProfile) ? s.studentProfile[0] : s.studentProfile;
+          return profile?.batch === selectedBatch;
+      });
+  }
+
   if (sortBy === 'lab') {
       filteredStudents.sort((a, b) => {
           const labA = (Array.isArray(a.studentProfile) ? a.studentProfile[0] : a.studentProfile)?.labNumber || '';
@@ -406,6 +414,16 @@ export default function StudentsPage() {
               onChange={e => setSearchTerm(e.target.value)}
               style={{ flex: 1, minWidth: '250px', padding: '1rem', border: '1px solid var(--border)', borderRadius: '12px', background: 'var(--surface)', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)' }}
           />
+          <select 
+              value={selectedBatch}
+              onChange={e => setSelectedBatch(e.target.value)}
+              style={{ padding: '1rem', border: '1px solid var(--border)', borderRadius: '12px', background: 'var(--surface)', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)', cursor: 'pointer' }}
+          >
+              <option value="ALL">Batch: All</option>
+              <option value="MORNING">Batch: Morning</option>
+              <option value="AFTERNOON">Batch: Mid</option>
+              <option value="EVENING">Batch: Afternoon</option>
+          </select>
           <select 
               value={sortBy}
               onChange={e => setSortBy(e.target.value)}

@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { cookies } from 'next/headers';
 
 // GET: Download attendance report as CSV for a given month
 export async function GET(req: Request) {
@@ -34,9 +35,40 @@ export async function GET(req: Request) {
       return count;
     }
 
+    // Extract auth token to check if FACULTY
+    const cookieStore = await cookies();
+    const token = cookieStore.get('auth_token')?.value;
+    let userRole = null;
+    let userId = null;
+    if (token) {
+      try {
+        const decoded = JSON.parse(decodeURIComponent(token));
+        userRole = decoded.role;
+        userId = decoded.id;
+      } catch (e) {}
+    }
+
+    let facultyLab = null;
+    if (userRole === 'FACULTY' && userId) {
+      const faculty = await prisma.facultyProfile.findUnique({
+        where: { userId },
+        include: { lab: true }
+      });
+      if (faculty?.lab?.name) {
+        facultyLab = faculty.lab.name;
+      }
+    }
+
     // Fetch all students with profiles including courseStartDate and attendances
+    let studentWhere: any = { role: 'STUDENT' };
+    if (facultyLab) {
+       studentWhere.studentProfile = {
+           labNumber: facultyLab
+       };
+    }
+
     const students = await prisma.user.findMany({
-      where: { role: 'STUDENT' },
+      where: studentWhere,
       include: {
         studentProfile: {
           include: {
@@ -50,6 +82,7 @@ export async function GET(req: Request) {
 
     // Build CSV rows
     const headers = [
+      'Admission No',
       'Student Name',
       'Total Working Days',
       'Total Present Days',
@@ -92,6 +125,7 @@ export async function GET(req: Request) {
           : 0;
 
         return [
+          profile.admissionNo || 'N/A',
           s.name,
           totalWorkingDays,
           present,

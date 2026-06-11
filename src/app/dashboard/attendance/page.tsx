@@ -25,6 +25,7 @@ export default function AttendancePage() {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [sortBy, setSortBy] = useState('none');
+  const [selectedBatch, setSelectedBatch] = useState<string>('ALL');
   const [facultyLabNumber, setFacultyLabNumber] = useState<string | null>(null);
   
   // Date state: Start of the visible week
@@ -303,6 +304,12 @@ export default function AttendancePage() {
         return profile?.labNumber === facultyLabNumber;
       });
     }
+    if (selectedBatch !== 'ALL') {
+      list = list.filter(s => {
+        const profile = Array.isArray(s.studentProfile) ? s.studentProfile[0] : s.studentProfile;
+        return profile?.batch === selectedBatch;
+      });
+    }
     if (sortBy === 'name') list.sort((a, b) => a.name.localeCompare(b.name));
     return list;
   }, [students, searchTerm, sortBy, facultyLabNumber]);
@@ -360,6 +367,16 @@ export default function AttendancePage() {
             onChange={e => setSearchTerm(e.target.value)}
             style={{ width: '100%', maxWidth: '300px', padding: '0.75rem', borderRadius: '10px', border: '1px solid var(--border)', background: 'var(--surface)' }}
           />
+          <select 
+            value={selectedBatch}
+            onChange={e => setSelectedBatch(e.target.value)}
+            style={{ padding: '0.75rem', borderRadius: '10px', border: '1px solid var(--border)', background: 'var(--surface)', cursor: 'pointer' }}
+          >
+            <option value="ALL">Batch: All</option>
+            <option value="MORNING">Batch: Morning</option>
+            <option value="AFTERNOON">Batch: Mid</option>
+            <option value="EVENING">Batch: Afternoon</option>
+          </select>
           <select 
             value={sortBy}
             onChange={e => setSortBy(e.target.value)}
