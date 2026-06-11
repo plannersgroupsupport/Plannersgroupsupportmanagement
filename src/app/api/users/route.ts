@@ -174,6 +174,13 @@ export async function PATCH(req: Request) {
 
       safeAssign('placedAt', updateData.placedAt);
       safeAssign('currentStatus', updateData.currentStatus);
+      
+      if (updateData.currentStatus === 'Dropped') {
+         studentUpdateData['droppedAt'] = new Date();
+      } else if (updateData.currentStatus !== undefined) {
+         studentUpdateData['droppedAt'] = null;
+      }
+
       safeAssign('systemNumber', updateData.systemNumber);
 
       if (Object.keys(studentUpdateData).length > 0) {

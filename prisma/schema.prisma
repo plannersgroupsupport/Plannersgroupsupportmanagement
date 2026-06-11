@@ -53,6 +53,7 @@ model StudentProfile {
   labId           String?   // Keep for legacy compatibility if needed
   lab             Lab?      @relation(fields: [labId], references: [id])
   systemNumber    String?   // New field for faculty system assignment
+  droppedAt       DateTime? // Date when student was marked as dropped
   
   attendances     Attendance[]
   certificateRecords CertificateRecord[]

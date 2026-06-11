@@ -403,6 +403,41 @@ export default function StudentsPage() {
             📲 Copy WhatsApp Numbers
           </button>
         )}
+        {role === 'FACULTY' && (
+          <button
+            onClick={() => {
+              const droppedStudents = filteredStudents.filter(s => {
+                const profile = Array.isArray(s.studentProfile) ? s.studentProfile[0] : s.studentProfile;
+                return profile?.currentStatus === 'Dropped';
+              });
+              if (droppedStudents.length === 0) { alert('No dropped students found.'); return; }
+              
+              const csvHeader = "Admission Number,Name,Package,Batch,Date of Join,Date of Dropped Marked\n";
+              const csvRows = droppedStudents.map(s => {
+                const profile = Array.isArray(s.studentProfile) ? s.studentProfile[0] : s.studentProfile;
+                const admNo = profile?.admissionNo || '';
+                const name = s.name.replace(/,/g, ' ');
+                const pkg = profile?.packageType || 'BASIC';
+                const batch = profile?.batch || '';
+                const joinDate = profile?.admissionDate ? new Date(profile.admissionDate).toLocaleDateString() : '';
+                const droppedDate = profile?.droppedAt ? new Date(profile.droppedAt).toLocaleDateString() : '';
+                return `"${admNo}","${name}","${pkg}","${batch}","${joinDate}","${droppedDate}"`;
+              }).join('\n');
+              
+              const blob = new Blob([csvHeader + csvRows], { type: 'text/csv' });
+              const url = window.URL.createObjectURL(blob);
+              const a = document.createElement('a');
+              a.href = url;
+              a.download = `Dropped_Students_Lab_${facultyLabNumber || 'All'}.csv`;
+              document.body.appendChild(a);
+              a.click();
+              document.body.removeChild(a);
+            }}
+            style={{ padding: '0.5rem 1.2rem', borderRadius: '20px', fontSize: '0.8rem', fontWeight: '700', background: '#dc2626', color: 'white', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.4rem', boxShadow: '0 2px 8px rgba(220,38,38,0.3)' }}
+          >
+            📉 Download Dropped List
+          </button>
+        )}
       </div>
       
       {/* Search Bar */}
@@ -560,7 +595,7 @@ export default function StudentsPage() {
                     {filteredStudents.map(s => {
                       const profile = Array.isArray(s.studentProfile) ? s.studentProfile[0] : s.studentProfile;
                       return (
-                      <tr key={s.id} style={{ borderBottom: '1px solid var(--border)', transition: 'background 0.2s' }} onMouseEnter={e => e.currentTarget.style.background = '#f8fafc'} onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
+                      <tr key={s.id} style={{ borderBottom: '1px solid var(--border)', transition: 'background 0.2s', backgroundColor: profile?.currentStatus === 'Dropped' ? '#fee2e2' : 'transparent' }} onMouseEnter={e => e.currentTarget.style.background = profile?.currentStatus === 'Dropped' ? '#fecaca' : '#f8fafc'} onMouseLeave={e => e.currentTarget.style.background = profile?.currentStatus === 'Dropped' ? '#fee2e2' : 'transparent'}>
                         <td style={{ padding: '1.25rem 1rem' }}>
                             <div style={{ fontWeight: '600' }}>{s.name}</div>
                             <div style={{ fontSize: '0.8rem', color: '#64748b' }}>{profile?.admissionNo || 'No ID'} • {s.loginId}</div>
@@ -591,6 +626,7 @@ export default function StudentsPage() {
                                     <option value="Exterior">Exterior</option>
                                     <option value="Interior">Interior</option>
                                     <option value="Completed">Completed</option>
+                                    <option value="Dropped">Dropped</option>
                                 </select>
                             ) : (
                                 <span style={{ padding: '0.2rem 0.6rem', borderRadius: '6px', fontSize: '0.8rem', background: '#f1f5f9', border: '1px solid var(--border)' }}>{profile?.currentStatus || 'Autocad'}</span>
@@ -732,6 +768,7 @@ export default function StudentsPage() {
                         <option value="Exterior">Status: Exterior</option>
                         <option value="Interior">Status: Interior</option>
                         <option value="Completed">Status: Completed</option>
+                        <option value="Dropped">Status: Dropped</option>
                     </select>
                 </div>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem', marginTop: '0.5rem' }}>
