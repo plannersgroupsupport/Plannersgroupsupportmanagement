@@ -8,9 +8,9 @@ export default function FacultyPage() {
   const [faculties, setFaculties] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
-  const [formData, setFormData] = useState({ name: '', loginId: '', password: '', role: 'FACULTY', phone: '', labNumber: 'NONE' });
+  const [formData, setFormData] = useState({ name: '', loginId: '', password: '', role: 'FACULTY', phone: '', labNumber: 'NONE', isIncharge: false });
   const [editingFaculty, setEditingFaculty] = useState<any | null>(null);
-  const [editForm, setEditForm] = useState({ name: '', loginId: '', phone: '', password: '', labNumber: 'NONE' });
+  const [editForm, setEditForm] = useState({ name: '', loginId: '', phone: '', password: '', labNumber: 'NONE', isIncharge: false });
   const [saving, setSaving] = useState(false);
 
   const fetchFaculties = () => {
@@ -31,7 +31,7 @@ export default function FacultyPage() {
     });
     if (res.ok) {
       alert('Faculty profile created successfully!');
-      setFormData({ name: '', loginId: '', password: '', role: 'FACULTY', phone: '', labNumber: 'NONE' });
+      setFormData({ name: '', loginId: '', password: '', role: 'FACULTY', phone: '', labNumber: 'NONE', isIncharge: false });
       fetchFaculties();
     } else {
       const errorData = await res.json();
@@ -57,7 +57,8 @@ export default function FacultyPage() {
       loginId: faculty.loginId,
       phone: faculty.phone || '',
       password: '',
-      labNumber: labName
+      labNumber: labName,
+      isIncharge: faculty.facultyProfile?.isIncharge || false
     });
     setEditingFaculty(faculty);
   };
@@ -70,7 +71,8 @@ export default function FacultyPage() {
       name: editForm.name,
       loginId: editForm.loginId,
       phone: editForm.phone,
-      labNumber: editForm.labNumber
+      labNumber: editForm.labNumber,
+      isIncharge: editForm.isIncharge
     };
     if (editForm.password.trim()) payload.password = editForm.password;
 
@@ -171,7 +173,7 @@ export default function FacultyPage() {
                       <td>{f.phone || 'N/A'}</td>
                       <td>
                         <span style={{ padding: '0.25rem 0.65rem', borderRadius: '20px', fontSize: '0.75rem', fontWeight: '700', background: lc.bg, color: lc.color, border: `1px solid ${lc.border}` }}>
-                          {labName || 'Unassigned'}
+                          {labName || 'Unassigned'} {f.facultyProfile?.isIncharge && '👑'}
                         </span>
                       </td>
                       <td style={{ textAlign: 'right', paddingRight: '1rem' }}>
@@ -240,6 +242,13 @@ export default function FacultyPage() {
               </div>
             </div>
 
+            <div style={{ marginTop: '0.5rem' }}>
+              <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer', fontSize: '0.85rem', fontWeight: 'bold', color: '#1e293b' }}>
+                <input type="checkbox" checked={formData.isIncharge} onChange={e => setFormData({ ...formData, isIncharge: e.target.checked })} style={{ width: '16px', height: '16px', accentColor: 'var(--primary)' }} />
+                👑 Mark as Lab In-charge
+              </label>
+            </div>
+
             <button type="submit" style={{ padding: '1rem', background: 'linear-gradient(135deg, var(--primary), #4c6ef5)', color: 'white', fontWeight: 'bold', border: 'none', borderRadius: '8px', cursor: 'pointer', marginTop: '0.5rem' }}>
               ➕ Create Faculty Profile
             </button>
@@ -290,6 +299,13 @@ export default function FacultyPage() {
                     );
                   })}
                 </div>
+              </div>
+
+              <div style={{ marginTop: '0.5rem' }}>
+                <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer', fontSize: '0.85rem', fontWeight: 'bold', color: '#1e293b' }}>
+                  <input type="checkbox" checked={editForm.isIncharge} onChange={e => setEditForm({ ...editForm, isIncharge: e.target.checked })} style={{ width: '16px', height: '16px', accentColor: 'var(--primary)' }} />
+                  👑 Mark as Lab In-charge
+                </label>
               </div>
 
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem', marginTop: '0.5rem' }}>

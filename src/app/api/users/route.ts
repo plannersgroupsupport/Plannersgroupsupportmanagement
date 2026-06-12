@@ -97,7 +97,8 @@ export async function POST(req: Request) {
       await prisma.facultyProfile.create({
         data: {
           userId: newUser.id,
-          labId: labId ?? null
+          labId: labId ?? null,
+          isIncharge: data.isIncharge || false
         }
       });
     }
@@ -214,6 +215,10 @@ export async function PATCH(req: Request) {
       
       if (updateData.totalSystems !== undefined) {
         updateObj.totalSystems = parseInt(updateData.totalSystems, 10);
+      }
+
+      if (updateData.isIncharge !== undefined) {
+        updateObj.isIncharge = Boolean(updateData.isIncharge);
       }
 
       if (Object.keys(updateObj).length > 0) {

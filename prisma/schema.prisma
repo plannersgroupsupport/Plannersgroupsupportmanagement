@@ -66,6 +66,7 @@ model FacultyProfile {
   labId           String?
   lab             Lab?      @relation("FacultyLab", fields: [labId], references: [id])
   totalSystems    Int?      // Total number of systems in the lab
+  isIncharge      Boolean   @default(false) // Whether faculty is in charge of the lab
 }
 
 model Lab {

@@ -44,7 +44,7 @@ export default async function DashboardPage() {
 
       const instructors = await prisma.user.findMany({
           where: { role: 'FACULTY' },
-          select: { id: true, name: true, facultyProfile: { include: { lab: true } }, fileUploads: { where: { type: 'PHOTO' }, take: 1, orderBy: { uploadedAt: 'desc' } } }
+          select: { id: true, name: true, phone: true, facultyProfile: { include: { lab: true } }, fileUploads: { where: { type: 'PHOTO' }, take: 1, orderBy: { uploadedAt: 'desc' } } }
       });
 
       // Filter: show only faculty assigned to student's lab, plus unassigned faculty
@@ -226,12 +226,15 @@ export default async function DashboardPage() {
                                     />
                                   ) : inst.name.charAt(0)}
                                 </div>
-                                <div style={{ textAlign: 'center' }}>
-                                  <div style={{ fontSize: '0.85rem', fontWeight: '700', maxWidth: '75px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{inst.name.split(' ')[0]}</div>
-                                  {inst.facultyProfile?.lab?.name && (
-                                    <div style={{ fontSize: '0.7rem', color: '#64748b' }}>{inst.facultyProfile.lab.name}</div>
-                                  )}
-                                </div>
+                                  <div style={{ textAlign: 'center' }}>
+                                    <div style={{ fontSize: '0.85rem', fontWeight: '700', maxWidth: '75px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{inst.name.split(' ')[0]}</div>
+                                    {inst.facultyProfile?.lab?.name && (
+                                      <div style={{ fontSize: '0.7rem', color: '#64748b' }}>{inst.facultyProfile.lab.name}</div>
+                                    )}
+                                    {inst.facultyProfile?.isIncharge && (
+                                      <div style={{ fontSize: '0.75rem', color: 'var(--primary)', fontWeight: 'bold', marginTop: '0.2rem', lineHeight: '1.2' }}>👑 In-charge<br/>📞 {inst.phone || 'N/A'}</div>
+                                    )}
+                                  </div>
                               </div>
                             );
                           }) : (
