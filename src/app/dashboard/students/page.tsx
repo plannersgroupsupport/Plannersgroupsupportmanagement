@@ -16,6 +16,7 @@ export default function StudentsPage() {
   const [resetRequests, setResetRequests] = useState<any[]>([]);
   const [activeTab, setActiveTab] = useState('STUDENTS'); // STUDENTS or RESETS
   const [selectedBatch, setSelectedBatch] = useState<string>('ALL');
+  const [selectedLab, setSelectedLab] = useState<string>('ALL');
   
   const [formData, setFormData] = useState({
     name: '',
@@ -292,6 +293,11 @@ export default function StudentsPage() {
       const profile = Array.isArray(s.studentProfile) ? s.studentProfile[0] : s.studentProfile;
       return profile?.labNumber === facultyLabNumber;
     });
+  } else if ((role === 'SUPERADMIN' || role === 'ACCOUNTANT') && selectedLab !== 'ALL') {
+    filteredStudents = filteredStudents.filter(s => {
+      const profile = Array.isArray(s.studentProfile) ? s.studentProfile[0] : s.studentProfile;
+      return profile?.labNumber === selectedLab;
+    });
   }
 
   if (selectedBatch !== 'ALL') {
@@ -380,17 +386,23 @@ export default function StudentsPage() {
         {role === 'FACULTY' && (
           <button
             onClick={() => {
-              const phones = filteredStudents
-                .map(s => (s.phone || '').replace(/\D/g, '').replace(/^91/, ''))
-                .filter(p => p.length >= 10)
-                .join(',');
-              if (!phones) { alert('No phone numbers available for your lab students.'); return; }
-              navigator.clipboard.writeText(phones)
-                .then(() => alert(`✅ ${filteredStudents.length} phone numbers copied!\n\nPaste directly into WhatsApp > New Group > Add Participants`))
+              const contactData = filteredStudents
+                .filter(s => s.phone && s.phone.length > 5)
+                .map(s => {
+                    const phone = (s.phone || '').replace(/\D/g, '').replace(/^91/, '');
+                    return `${s.name}\t${phone}`;
+                })
+                .join('\n');
+              
+              if (!contactData) { alert('No valid phone numbers available for your lab students.'); return; }
+              const textToCopy = "Name\tPhone\n" + contactData;
+              
+              navigator.clipboard.writeText(textToCopy)
+                .then(() => alert(`✅ ${filteredStudents.length} contacts copied in table format!\n\nYou can now paste this directly into Excel or a text document.`))
                 .catch(() => {
                   // Fallback for browsers that block clipboard
                   const ta = document.createElement('textarea');
-                  ta.value = phones;
+                  ta.value = textToCopy;
                   document.body.appendChild(ta);
                   ta.select();
                   document.execCommand('copy');
@@ -459,6 +471,19 @@ export default function StudentsPage() {
               <option value="AFTERNOON">Batch: Mid</option>
               <option value="EVENING">Batch: Afternoon</option>
           </select>
+          {(role === 'SUPERADMIN' || role === 'ACCOUNTANT') && (
+              <select 
+                  value={selectedLab}
+                  onChange={e => setSelectedLab(e.target.value)}
+                  style={{ padding: '1rem', border: '1px solid var(--border)', borderRadius: '12px', background: 'var(--surface)', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)', cursor: 'pointer' }}
+              >
+                  <option value="ALL">Lab: All</option>
+                  <option value="LAB-1">Lab-1</option>
+                  <option value="LAB-2">Lab-2</option>
+                  <option value="LAB-3">Lab-3</option>
+                  <option value="LAB-4">Lab-4</option>
+              </select>
+          )}
           <select 
               value={sortBy}
               onChange={e => setSortBy(e.target.value)}

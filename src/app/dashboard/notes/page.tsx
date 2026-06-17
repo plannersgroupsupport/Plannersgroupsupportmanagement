@@ -2,8 +2,8 @@
 'use client';
 import { useState, useEffect } from 'react';
 
-const AUTOCAD_CATEGORIES = ['traditional', 'contempary', 'colonial', 'sanction', '4 side elevation', 'landscape', 'electrical', 'isomatric', 'Temple', 'Mosque', 'Church', 'Grid drawing', 'Centerline', 'Commercial', 'Setout'];
-const THREED_EXTERIOR = ['traditional', 'contempary', 'colonial'];
+const AUTOCAD_CATEGORIES = ['traditional', 'contemporary', 'colonial', 'sanction', '4 side elevation', 'landscape', 'electrical', 'isometric', 'Temple', 'Mosque', 'Church', 'Grid drawing', 'Centerline', 'Commercial', 'Setout'];
+const THREED_EXTERIOR = ['traditional', 'contemporary', 'colonial'];
 const THREED_INTERIOR = ['bedroom', 'bathroom', 'dinning', 'living', 'kitchen'];
 const LUMION_OPTIONS = ['Option 1', 'Option 2', 'Option 3'];
 
@@ -157,7 +157,7 @@ export default function ProjectSubmissionPage() {
   const renderSubheading = (title: string, keys: string[], prefix: string, requiresPdf: boolean) => {
       return (
           <div style={{ marginBottom: '2rem' }}>
-              <h4 style={{ color: '#475569', borderBottom: '1px solid #e2e8f0', paddingBottom: '0.5rem', marginBottom: '1rem', display: 'flex', justifyContent: 'space-between' }}>
+              <h4 style={{ color: '#475569', borderBottom: '1px solid #e2e8f0', paddingBottom: '0.5rem', marginBottom: '1rem', display: 'flex', justifyContent: 'space-between', textTransform: 'uppercase' }}>
                   {title}
                   {!requiresPdf && <span style={{ fontSize: '0.75rem', fontWeight: 'normal', color: '#f59e0b', background: '#fef3c7', padding: '0.2rem 0.6rem', borderRadius: '4px' }}>PNG/JPG • Max 7MB</span>}
                   {requiresPdf && <span style={{ fontSize: '0.75rem', fontWeight: 'normal', color: '#10b981', background: '#dcfce7', padding: '0.2rem 0.6rem', borderRadius: '4px' }}>PDF Only</span>}
@@ -168,7 +168,7 @@ export default function ProjectSubmissionPage() {
                       const proj = getUploadedProject(courseKey);
                       return (
                           <div key={courseKey} style={{ border: '1px solid #e2e8f0', background: '#f8fafc', borderRadius: '8px', padding: '1rem', display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-                              <div style={{ fontWeight: '600', textTransform: 'capitalize' }}>{k}</div>
+                              <div style={{ fontWeight: '600', textTransform: 'uppercase' }}>{k}</div>
                               {proj ? (
                                   <div style={{ display: 'flex', gap: '0.5rem' }}>
                                       <a href={proj.url} target="_blank" rel="noopener noreferrer" style={{ flex: 1, textAlign: 'center', background: 'var(--primary)', color: 'white', padding: '0.4rem', borderRadius: '4px', textDecoration: 'none', fontSize: '0.8rem', fontWeight: 'bold' }}>View</a>
