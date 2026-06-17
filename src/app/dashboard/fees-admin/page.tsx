@@ -32,6 +32,8 @@ export default function AccountantFeesPage() {
     const [loading, setLoading] = useState(true);
     const [paymentData, setPaymentData] = useState<Record<string, { amount: string, month: string, paidDate: string, billNumber: string }>>({});
     const [searchTerm, setSearchTerm] = useState('');
+    const [selectedBatch, setSelectedBatch] = useState<string>('ALL');
+    const [selectedLab, setSelectedLab] = useState<string>('ALL');
 
     const fetchStudents = () => {
         fetch('/api/users?role=STUDENT')
@@ -150,6 +152,10 @@ export default function AccountantFeesPage() {
 
     const filteredStudents = students.filter(s => {
         const profile = Array.isArray(s.studentProfile) ? s.studentProfile[0] : s.studentProfile;
+        
+        if (selectedBatch !== 'ALL' && profile?.batch !== selectedBatch) return false;
+        if (selectedLab !== 'ALL' && profile?.labNumber !== selectedLab) return false;
+
         return s.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
                s.loginId.toLowerCase().includes(searchTerm.toLowerCase()) ||
                (profile?.admissionNo && profile.admissionNo.toLowerCase().includes(searchTerm.toLowerCase()));
@@ -168,16 +174,39 @@ export default function AccountantFeesPage() {
            <p style={{ color: '#64748b', marginBottom: '2rem' }}>Accountant Dashboard - Real calendar months automatically generated relative to each student&apos;s exact Admission Date.</p>
 
            <div className="card">
-             <div className="fees-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-                 <h3 style={{ color: 'var(--primary)' }}>Active Student Directory</h3>
-                 <input 
-                     type="text" 
-                     placeholder="Search by Name or ID..." 
-                     value={searchTerm}
-                     onChange={e => setSearchTerm(e.target.value)}
-                     className="fees-search"
-                     style={{ padding: '0.6rem', border: '1px solid var(--border)', borderRadius: '6px', width: '300px' }}
-                 />
+             <div className="fees-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem', flexWrap: 'wrap', gap: '1rem' }}>
+                 <h3 style={{ color: 'var(--primary)', margin: 0 }}>Active Student Directory</h3>
+                 <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
+                     <select 
+                         value={selectedBatch}
+                         onChange={e => setSelectedBatch(e.target.value)}
+                         style={{ padding: '0.6rem', border: '1px solid var(--border)', borderRadius: '6px', background: 'var(--surface)', cursor: 'pointer' }}
+                     >
+                         <option value="ALL">Batch: All</option>
+                         <option value="MORNING">Morning</option>
+                         <option value="AFTERNOON">Mid</option>
+                         <option value="EVENING">Afternoon</option>
+                     </select>
+                     <select 
+                         value={selectedLab}
+                         onChange={e => setSelectedLab(e.target.value)}
+                         style={{ padding: '0.6rem', border: '1px solid var(--border)', borderRadius: '6px', background: 'var(--surface)', cursor: 'pointer' }}
+                     >
+                         <option value="ALL">Lab: All</option>
+                         <option value="LAB-1">Lab-1</option>
+                         <option value="LAB-2">Lab-2</option>
+                         <option value="LAB-3">Lab-3</option>
+                         <option value="LAB-4">Lab-4</option>
+                     </select>
+                     <input 
+                         type="text" 
+                         placeholder="Search by Name or ID..." 
+                         value={searchTerm}
+                         onChange={e => setSearchTerm(e.target.value)}
+                         className="fees-search"
+                         style={{ padding: '0.6rem', border: '1px solid var(--border)', borderRadius: '6px', width: '250px' }}
+                     />
+                 </div>
              </div>
              
              {loading ? <p>Loading student directory...</p> : (
