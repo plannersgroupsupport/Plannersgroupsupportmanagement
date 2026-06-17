@@ -303,8 +303,8 @@ export default function ProjectSubmissionPage() {
 
       {hasCourse('lumion') && (
           <div className="card" style={{ marginBottom: '2rem' }}>
-             <h3 style={{ color: '#059669', borderBottom: '2px solid #a7f3d0', paddingBottom: '0.5rem', marginBottom: '1.5rem' }}>Lumion Projects</h3>
-             {renderSubheading('File Uploads', LUMION_OPTIONS, 'LUMION', false)}
+             <h3 style={{ color: '#059669', borderBottom: '2px solid #a7f3d0', paddingBottom: '0.5rem', marginBottom: '1.5rem' }}>LUMION Submissions</h3>
+             {renderSubheading('LUMION Projects', LUMION_OPTIONS, 'LUMION', false)}
           </div>
       )}
 
