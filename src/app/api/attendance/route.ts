@@ -3,6 +3,11 @@ import { prisma } from '@/lib/prisma';
 
 export const dynamic = 'force-dynamic';
 
+// Helper: extract YYYY-MM-DD from stored UTC midnight date
+function toDateKey(date: Date): string {
+  return date.toISOString().split('T')[0];
+}
+
 // GET: Fetch attendance records for students in a given range
 export async function GET(req: Request) {
   try {
@@ -22,9 +27,10 @@ export async function GET(req: Request) {
 
     if (month) {
       const [year, mon] = month.split('-').map(Number);
+      // Use UTC boundaries so they match how dates are stored (UTC midnight)
       whereClause.date = { 
-        gte: new Date(year, mon - 1, 1), 
-        lte: new Date(year, mon, 0, 23, 59, 59, 999) 
+        gte: new Date(`${year}-${String(mon).padStart(2, '0')}-01T00:00:00.000Z`), 
+        lte: new Date(`${year}-${String(mon).padStart(2, '0')}-${new Date(year, mon, 0).getDate()}T23:59:59.999Z`)
       };
     } else if (startDateParam && endDateParam) {
       whereClause.date = { 
