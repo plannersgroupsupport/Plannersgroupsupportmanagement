@@ -30,12 +30,12 @@ export default function StudentAttendanceCalendar({ userId }: { userId: string }
       const monthKey = getMonthKey(year, month);
       
       // Fetch Holidays
-      const holidayRes = await fetch(`/api/holidays?month=${monthKey}`);
+      const holidayRes = await fetch(`/api/holidays?month=${monthKey}&_t=${Date.now()}`);
       const holidayData = await holidayRes.json();
       setHolidayMap(holidayData.holidayMap || {});
 
       // Fetch Attendance
-      const attendanceRes = await fetch(`/api/attendance?userId=${userId}&month=${monthKey}`);
+      const attendanceRes = await fetch(`/api/attendance?userId=${userId}&month=${monthKey}&_t=${Date.now()}`);
       const attendanceData = await attendanceRes.json();
       setAttendanceMap(attendanceData.attendanceMap || {});
     } catch (err) {
