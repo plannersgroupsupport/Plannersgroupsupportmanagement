@@ -86,7 +86,8 @@ export async function POST(request: Request) {
             district: data.district,
             taluk: data.taluk,
             pincode: data.pincode,
-            packageType: data.packageType || 'BASIC'
+            packageType: data.packageType || 'BASIC',
+            totalCourseFee: data.totalCourseFee !== undefined ? parseFloat(data.totalCourseFee) : (data.packageType === 'PREMIUM' ? 65000 : 35000)
           }
         });
 

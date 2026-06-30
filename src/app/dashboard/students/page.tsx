@@ -27,6 +27,7 @@ export default function StudentsPage() {
     phone: '',
     role: 'STUDENT',
     packageType: 'BASIC',
+    totalCourseFee: '',
     currentStatus: 'Autocad',
     admissionDate: '',
     dob: '',
@@ -129,7 +130,8 @@ export default function StudentsPage() {
       body: JSON.stringify({
         ...formData,
         id: editingId,
-        courseName: formData.courses.join(', ') || 'General'
+        courseName: formData.courses.join(', ') || 'General',
+        totalCourseFee: formData.totalCourseFee || undefined
       })
     });
     if (res.ok) {
@@ -154,6 +156,7 @@ export default function StudentsPage() {
       phone: student.phone || '',
       role: 'STUDENT',
       packageType: profile?.packageType || 'BASIC',
+      totalCourseFee: profile?.totalCourseFee?.toString() || '',
       currentStatus: profile?.currentStatus || 'Autocad',
       admissionDate: profile?.admissionDate?.split('T')[0] || '',
       dob: profile?.dob?.split('T')[0] || '',
@@ -816,7 +819,16 @@ export default function StudentsPage() {
                     <label style={{ flex: 1, textAlign: 'center', padding: '0.4rem', borderRadius: '6px', background: formData.packageType === 'PREMIUM' ? 'var(--primary)' : 'white', color: formData.packageType === 'PREMIUM' ? 'white' : 'inherit', cursor: 'pointer', fontSize: '0.75rem', fontWeight: 'bold', border: '1px solid #e2e8f0' }}>
                         <input type="radio" checked={formData.packageType === 'PREMIUM'} onChange={() => setFormData({...formData, packageType: 'PREMIUM'})} style={{ display: 'none' }} /> PREMIUM
                     </label>
+                    <label style={{ flex: 1, textAlign: 'center', padding: '0.4rem', borderRadius: '6px', background: (formData.packageType !== 'BASIC' && formData.packageType !== 'PREMIUM') ? 'var(--primary)' : 'white', color: (formData.packageType !== 'BASIC' && formData.packageType !== 'PREMIUM') ? 'white' : 'inherit', cursor: 'pointer', fontSize: '0.75rem', fontWeight: 'bold', border: '1px solid #e2e8f0' }}>
+                        <input type="radio" checked={formData.packageType !== 'BASIC' && formData.packageType !== 'PREMIUM'} onChange={() => setFormData({...formData, packageType: 'OTHER', totalCourseFee: ''})} style={{ display: 'none' }} /> OTHER
+                    </label>
                 </div>
+                {(formData.packageType !== 'BASIC' && formData.packageType !== 'PREMIUM') && (
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem', marginTop: '0.5rem' }}>
+                        <FloatInput label="Custom Package Name" required value={formData.packageType === 'OTHER' ? '' : formData.packageType} onChange={e => setFormData({...formData, packageType: e.target.value || 'OTHER'})} />
+                        <FloatInput label="Total Course Fee (₹)" required type="number" value={formData.totalCourseFee} onChange={e => setFormData({...formData, totalCourseFee: e.target.value})} />
+                    </div>
+                )}
 
                 <div style={{ padding: '1rem', border: '1px solid var(--border)', borderRadius: '8px' }}>
                     <label style={{ fontSize: '0.8rem', fontWeight: 'bold', color: '#64748b', display: 'block', marginBottom: '0.5rem' }}>Select Courses</label>

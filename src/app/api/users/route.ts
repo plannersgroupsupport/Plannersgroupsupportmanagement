@@ -78,7 +78,7 @@ export async function POST(req: Request) {
            taluk: data.taluk,
            pincode: data.pincode,
            packageType: data.packageType || 'BASIC',
-           totalCourseFee: data.packageType === 'PREMIUM' ? 65000 : 35000,
+           totalCourseFee: data.totalCourseFee !== undefined ? parseFloat(data.totalCourseFee) : (data.packageType === 'PREMIUM' ? 65000 : 35000),
            currentStatus: data.currentStatus || 'Autocad'
         }
       });

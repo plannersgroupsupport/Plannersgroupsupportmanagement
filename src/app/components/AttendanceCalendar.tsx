@@ -121,8 +121,8 @@ export default function StudentAttendanceCalendar({ userId }: { userId: string }
               let textColor = 'var(--foreground)';
               let icon = '';
 
-              if (isSunday) { bg = '#fef2f2'; textColor = '#fca5a5'; borderColor = '#fee2e2'; }
-              if (isHoliday) { bg = '#fffbeb'; borderColor = '#fde68a'; icon = '🏖️'; }
+              if (isSunday) { bg = '#fffbeb'; borderColor = '#fde68a'; icon = '🏖️'; textColor = '#d97706'; }
+              if (isHoliday || status === 'HOLIDAY') { bg = '#fffbeb'; borderColor = '#fde68a'; icon = '🏖️'; textColor = '#d97706'; }
               if (status === 'PRESENT') { bg = '#ecfdf5'; borderColor = '#34d399'; icon = '✓'; textColor = '#059669'; }
               if (status === 'ABSENT') { bg = '#fef2f2'; borderColor = '#f87171'; icon = '✕'; textColor = '#dc2626'; }
               if (status === 'MEDICAL') { bg = '#f5f3ff'; borderColor = '#a78bfa'; icon = '🏥'; textColor = '#7c3aed'; }
