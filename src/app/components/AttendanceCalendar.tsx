@@ -139,18 +139,20 @@ export default function StudentAttendanceCalendar({ userId }: { userId: string }
               const isHoliday = !!holidayMap[dateKey];
               const status = attendanceMap[dateKey];
 
-              let bg = 'transparent';
-              let borderColor = '#f1f5f9';
-              let textColor = 'var(--foreground)';
+              let bg = '#f8fafc';        // default: subtle gray background
+              let borderColor = '#e2e8f0'; // default: visible light border
+              let textColor = '#64748b';   // default: muted text
               let icon = '';
 
-              // Apply styles in priority order: Sunday/holiday first, then faculty-marked statuses override
-              if (isSunday) { bg = '#fffbeb'; borderColor = '#fde68a'; icon = '🏖️'; textColor = '#d97706'; }
-              if (isHoliday || status === 'HOLIDAY') { bg = '#fffbeb'; borderColor = '#fde68a'; icon = '🏖️'; textColor = '#d97706'; }
-              // Faculty-marked statuses take highest priority
+              // Faculty-marked statuses (applied first, lowest priority base)
+              if (status === 'HOLIDAY') { bg = '#fffbeb'; borderColor = '#fde68a'; icon = '🏖️'; textColor = '#d97706'; }
               if (status === 'PRESENT') { bg = '#ecfdf5'; borderColor = '#34d399'; icon = '✓'; textColor = '#059669'; }
               if (status === 'ABSENT') { bg = '#fef2f2'; borderColor = '#f87171'; icon = '✕'; textColor = '#dc2626'; }
               if (status === 'MEDICAL') { bg = '#f5f3ff'; borderColor = '#a78bfa'; icon = '🏥'; textColor = '#7c3aed'; }
+              // Admin-set holiday (overrides individual marks)
+              if (isHoliday) { bg = '#fffbeb'; borderColor = '#fde68a'; icon = '🏖️'; textColor = '#d97706'; }
+              // SUNDAY always = Holiday — highest priority, cannot be overridden
+              if (isSunday) { bg = '#fffbeb'; borderColor = '#fde68a'; icon = '🏖️'; textColor = '#d97706'; }
 
               return (
                 <div key={day} style={{ 
