@@ -33,9 +33,43 @@ export default async function DashboardPage() {
       const profileData: any = profile;
       
       const attendances = profileData?.attendances || [];
-      const totalClasses = attendances.length;
-      const presentClasses = attendances.filter((a: any) => a.status === 'PRESENT').length;
-      const attendancePercentage = totalClasses === 0 ? 0 : Math.round((presentClasses / totalClasses) * 100);
+
+      // Fetch all holidays to exclude them from working day count
+      const allHolidays = await prisma.holiday.findMany();
+      const holidaySet = new Set(allHolidays.map((h: any) => h.date.toISOString().split('T')[0]));
+
+      // Build a set of dates with PRESENT attendance
+      const presentSet = new Set(
+        attendances
+          .filter((a: any) => a.status === 'PRESENT')
+          .map((a: any) => (a.date instanceof Date ? a.date : new Date(a.date)).toISOString().split('T')[0])
+      );
+
+      // Count working days (Mon–Sat, not a holiday) from courseStartDate to today
+      const startDate = profile?.courseStartDate ? new Date(profile.courseStartDate) : null;
+      const today = new Date();
+      today.setUTCHours(23, 59, 59, 999);
+
+      let totalWorkingDays = 0;
+      let presentWorkingDays = 0;
+
+      if (startDate) {
+        const cursor = new Date(startDate);
+        cursor.setUTCHours(0, 0, 0, 0);
+        while (cursor <= today) {
+          const dayOfWeek = cursor.getUTCDay(); // 0=Sun, 6=Sat
+          const dateKey = cursor.toISOString().split('T')[0];
+          if (dayOfWeek !== 0 && !holidaySet.has(dateKey)) { // Mon–Sat, non-holiday
+            totalWorkingDays++;
+            if (presentSet.has(dateKey)) presentWorkingDays++;
+          }
+          cursor.setUTCDate(cursor.getUTCDate() + 1);
+        }
+      }
+
+      const presentClasses = presentWorkingDays;
+      const totalClasses = totalWorkingDays;
+      const attendancePercentage = totalWorkingDays === 0 ? 0 : Math.round((presentWorkingDays / totalWorkingDays) * 100);
 
       const courseFeeOverride = profileData?.totalCourseFee ?? (profileData?.packageType === 'PREMIUM' ? 65000 : 35000);
       const totalPayable = Math.max(0, courseFeeOverride - totalPaid);
