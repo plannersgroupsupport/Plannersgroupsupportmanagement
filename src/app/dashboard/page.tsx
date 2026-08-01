@@ -71,6 +71,35 @@ export default async function DashboardPage() {
       const totalClasses = totalWorkingDays;
       const attendancePercentage = totalWorkingDays === 0 ? 0 : Math.round((presentWorkingDays / totalWorkingDays) * 100);
 
+      // Month-by-month breakdown from courseStartDate to today
+      const monthlyStats: { label: string; workingDays: number; presentDays: number; percentage: number }[] = [];
+      if (startDate) {
+        const todayUTC = new Date();
+        todayUTC.setUTCHours(23, 59, 59, 999);
+        const cur = new Date(Date.UTC(startDate.getUTCFullYear(), startDate.getUTCMonth(), 1));
+        while (cur <= todayUTC) {
+          const y = cur.getUTCFullYear();
+          const m = cur.getUTCMonth();
+          const mStart = new Date(Date.UTC(y, m, 1));
+          const mEnd = new Date(Date.UTC(y, m + 1, 0, 23, 59, 59, 999));
+          const effStart = startDate > mStart ? new Date(startDate) : mStart;
+          effStart.setUTCHours(0, 0, 0, 0);
+          const effEnd = mEnd < todayUTC ? mEnd : todayUTC;
+          let wDays = 0, pDays = 0;
+          const dc = new Date(effStart);
+          while (dc <= effEnd) {
+            const dow = dc.getUTCDay();
+            const dk = dc.toISOString().split('T')[0];
+            if (dow !== 0 && !holidaySet.has(dk)) { wDays++; if (presentSet.has(dk)) pDays++; }
+            dc.setUTCDate(dc.getUTCDate() + 1);
+          }
+          const pct = wDays > 0 ? Math.round((pDays / wDays) * 100) : 0;
+          const label = new Date(y, m).toLocaleString('en-US', { month: 'long', year: 'numeric' });
+          monthlyStats.push({ label, workingDays: wDays, presentDays: pDays, percentage: pct });
+          cur.setUTCMonth(cur.getUTCMonth() + 1);
+        }
+      }
+
       const courseFeeOverride = profileData?.totalCourseFee ?? (profileData?.packageType === 'PREMIUM' ? 65000 : 35000);
       const totalPayable = Math.max(0, courseFeeOverride - totalPaid);
       
@@ -211,26 +240,65 @@ export default async function DashboardPage() {
 
               {/* RIGHT COLUMN */}
               <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-                  
-                  {/* Attendance Performance Head */}
-                  <div>
-                      <h3 style={{ fontSize: '1.15rem', fontWeight: 'bold', marginBottom: '0.75rem', color: 'var(--foreground)' }}>Attendance Performance</h3>
-                      <div style={{ background: 'white', borderRadius: '16px', padding: '1.5rem', boxShadow: '0 4px 20px -5px rgba(0,0,0,0.06)', border: '1px solid var(--border)' }}>
-                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-                              <div>
-                                <span style={{ display: 'block', fontSize: '2.5rem', fontWeight: '800', color: attendancePercentage >= 75 ? '#10b981' : attendancePercentage >= 50 ? '#f59e0b' : '#ef4444' }}>{attendancePercentage}%</span>
-                                <span style={{ fontSize: '0.8rem', color: '#64748b', fontWeight: 'bold' }}>Overall Attendance Rate</span>
-                              </div>
-                              <div style={{ textAlign: 'right' }}>
-                                <div style={{ fontSize: '1rem', fontWeight: '800', color: 'var(--foreground)' }}>{presentClasses} / {totalClasses}</div>
-                                <div style={{ fontSize: '0.75rem', color: '#64748b' }}>Days Present</div>
-                              </div>
-                          </div>
-                          <div style={{ width: '100%', height: '10px', background: '#f1f5f9', borderRadius: '10px', overflow: 'hidden' }}>
-                              <div style={{ height: '100%', background: attendancePercentage >= 75 ? '#10b981' : attendancePercentage >= 50 ? '#f59e0b' : '#ef4444', width: `${attendancePercentage}%`, transition: 'width 1s ease-in-out' }}></div>
-                          </div>
-                      </div>
-                  </div>
+                               {/* Attendance Performance */}
+                   <div>
+                       <h3 style={{ fontSize: '1.15rem', fontWeight: 'bold', marginBottom: '0.75rem', color: 'var(--foreground)' }}>Attendance Performance</h3>
+                       <div style={{ background: 'white', borderRadius: '16px', padding: '1.5rem', boxShadow: '0 4px 20px -5px rgba(0,0,0,0.06)', border: '1px solid var(--border)' }}>
+                           {/* Overall */}
+                           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
+                               <div>
+                                 <span style={{ display: 'block', fontSize: '2.5rem', fontWeight: '800', color: attendancePercentage >= 75 ? '#10b981' : attendancePercentage >= 50 ? '#f59e0b' : '#ef4444' }}>{attendancePercentage}%</span>
+                                 <span style={{ fontSize: '0.8rem', color: '#64748b', fontWeight: 'bold' }}>Overall Attendance Rate</span>
+                               </div>
+                               <div style={{ textAlign: 'right' }}>
+                                 <div style={{ fontSize: '1rem', fontWeight: '800', color: 'var(--foreground)' }}>{presentClasses} / {totalClasses}</div>
+                                 <div style={{ fontSize: '0.75rem', color: '#64748b' }}>Days Present / Working Days</div>
+                               </div>
+                           </div>
+                           <div style={{ width: '100%', height: '8px', background: '#f1f5f9', borderRadius: '10px', overflow: 'hidden', marginBottom: '1.25rem' }}>
+                               <div style={{ height: '100%', background: attendancePercentage >= 75 ? '#10b981' : attendancePercentage >= 50 ? '#f59e0b' : '#ef4444', width: `${attendancePercentage}%`, transition: 'width 1s ease-in-out', borderRadius: '10px' }}></div>
+                           </div>
+
+                           {/* Month-by-month table */}
+                           {monthlyStats.length > 0 && (
+                             <div>
+                               <div style={{ fontSize: '0.7rem', fontWeight: '800', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '0.5rem' }}>Monthly Breakdown</div>
+                               <div style={{ overflowX: 'auto' }}>
+                                 <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.8rem' }}>
+                                   <thead>
+                                     <tr style={{ background: '#f8fafc', borderBottom: '1px solid #e2e8f0' }}>
+                                       <th style={{ padding: '0.5rem 0.75rem', textAlign: 'left', fontWeight: '700', color: '#475569' }}>Month</th>
+                                       <th style={{ padding: '0.5rem 0.75rem', textAlign: 'center', fontWeight: '700', color: '#475569' }}>Working Days</th>
+                                       <th style={{ padding: '0.5rem 0.75rem', textAlign: 'center', fontWeight: '700', color: '#475569' }}>Present</th>
+                                       <th style={{ padding: '0.5rem 0.75rem', textAlign: 'center', fontWeight: '700', color: '#475569' }}>%</th>
+                                     </tr>
+                                   </thead>
+                                   <tbody>
+                                     {monthlyStats.map((ms, idx) => (
+                                       <tr key={idx} style={{ borderBottom: '1px solid #f1f5f9' }}>
+                                         <td style={{ padding: '0.5rem 0.75rem', fontWeight: '600', color: '#1e293b' }}>{ms.label}</td>
+                                         <td style={{ padding: '0.5rem 0.75rem', textAlign: 'center', color: '#475569' }}>{ms.workingDays}</td>
+                                         <td style={{ padding: '0.5rem 0.75rem', textAlign: 'center', color: '#475569' }}>{ms.presentDays}</td>
+                                         <td style={{ padding: '0.5rem 0.75rem', textAlign: 'center' }}>
+                                           <span style={{
+                                             display: 'inline-block',
+                                             padding: '0.15rem 0.5rem',
+                                             borderRadius: '20px',
+                                             fontWeight: '700',
+                                             fontSize: '0.75rem',
+                                             background: ms.percentage >= 75 ? '#ecfdf5' : ms.percentage >= 50 ? '#fffbeb' : '#fef2f2',
+                                             color: ms.percentage >= 75 ? '#059669' : ms.percentage >= 50 ? '#d97706' : '#dc2626',
+                                           }}>{ms.percentage}%</span>
+                                         </td>
+                                       </tr>
+                                     ))}
+                                   </tbody>
+                                 </table>
+                               </div>
+                             </div>
+                           )}
+                       </div>
+                   </div>
 
                    {/* Course Instructors */}
                   <div>
